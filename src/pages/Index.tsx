@@ -23,6 +23,7 @@ interface Article {
   favicon?: string;
   dateAdded: string;
   publishedDate?: string;
+  read: boolean;
 }
 
 const Index = () => {
@@ -62,14 +63,24 @@ const Index = () => {
       favicon: articleData.favicon,
       dateAdded: new Date().toISOString(),
       publishedDate: articleData.publishedDate,
+      read: false,
     };
     const updatedArticles = [newArticle, ...articles];
     setArticles(updatedArticles);
     localStorage.setItem('articles', JSON.stringify(updatedArticles));
   };
 
+  const toggleReadStatus = (articleId: string) => {
+    const updatedArticles = articles.map(article => 
+      article.id === articleId ? { ...article, read: !article.read } : article
+    );
+    setArticles(updatedArticles);
+    localStorage.setItem('articles', JSON.stringify(updatedArticles));
+  };
+
   const sortedArticles = [...articles]
     .filter(article => selectedDomain === "all" || extractDomain(article.url) === selectedDomain)
+    .filter(article => preferences.readFilter === "all" || (preferences.readFilter === "read" ? article.read : !article.read))
     .sort((a, b) => {
       const dateA = new Date(a.dateAdded).getTime();
       const dateB = new Date(b.dateAdded).getTime();
@@ -89,6 +100,18 @@ const Index = () => {
                 filtered by <span className="font-medium text-muted-foreground ml-1">{selectedDomain}</span>
               </span>
             )}
+            {preferences.readFilter !== "all" && (
+              <span className="inline-flex items-center">
+                <span className="mx-2 text-muted-foreground/40">•</span>
+                {preferences.readFilter === "read" ? (
+                  <span className="font-medium text-muted-foreground ml-1">read</span>
+                ) : (
+                  <span className="font-medium text-muted-foreground ml-1">unread</span>
+                )}
+              </span>
+            )}
+            <span className="mx-2 text-muted-foreground/40">•</span>
+            {articles.filter(a => a.read).length} read
           </p>
         </div>
         
@@ -99,12 +122,23 @@ const Index = () => {
                 <SelectValue placeholder="Filter by domain" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all" className="text-sm">All domains</SelectItem>
-                {getUniqueDomains().map((domain) => (
-                  <SelectItem key={domain} value={domain} className="text-sm">
+                <SelectItem value="all">All domains</SelectItem>
+                {getUniqueDomains().map(domain => (
+                  <SelectItem key={domain} value={domain}>
                     {domain}
                   </SelectItem>
                 ))}
+              </SelectContent>
+            </Select>
+
+            <Select value={preferences.readFilter} onValueChange={(value: 'all' | 'read' | 'unread') => updatePreference('readFilter', value)}>
+              <SelectTrigger className="w-[200px] h-9 text-sm bg-background border-muted-foreground/20">
+                <SelectValue placeholder="Filter by read status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All articles</SelectItem>
+                <SelectItem value="read">Read articles</SelectItem>
+                <SelectItem value="unread">Unread articles</SelectItem>
               </SelectContent>
             </Select>
             
@@ -156,7 +190,7 @@ const Index = () => {
         </div>
 
         <div className="transition-all duration-300">
-          <ArticleList articles={sortedArticles} displayStyle={preferences.displayStyle} />
+          <ArticleList articles={sortedArticles} displayStyle={preferences.displayStyle} toggleReadStatus={toggleReadStatus} />
         </div>
       </div>
     </div>
