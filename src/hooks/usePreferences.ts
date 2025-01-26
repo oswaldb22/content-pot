@@ -3,11 +3,13 @@ import { useState, useEffect } from 'react';
 interface Preferences {
   displayStyle: 'full' | 'minimal';
   sortOrder: 'newest' | 'oldest';
+  readFilter: 'all' | 'read' | 'unread';
 }
 
 const DEFAULT_PREFERENCES: Preferences = {
   displayStyle: 'full',
   sortOrder: 'newest',
+  readFilter: 'all',
 };
 
 export function usePreferences() {
