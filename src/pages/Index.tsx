@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { AddArticleModal } from "@/components/AddArticleModal";
 import { ArticleList } from "@/components/ArticleList";
 
@@ -10,10 +10,19 @@ interface Article {
   description?: string;
   image?: string;
   favicon?: string;
+  dateAdded: string;
+  publishedDate?: string;
 }
 
 const Index = () => {
   const [articles, setArticles] = useState<Article[]>([]);
+
+  useEffect(() => {
+    const savedArticles = localStorage.getItem('articles');
+    if (savedArticles) {
+      setArticles(JSON.parse(savedArticles));
+    }
+  }, []);
 
   const handleAddArticle = (articleData: Partial<Article>) => {
     const newArticle: Article = {
@@ -24,8 +33,12 @@ const Index = () => {
       description: articleData.description,
       image: articleData.image,
       favicon: articleData.favicon,
+      dateAdded: new Date().toISOString(),
+      publishedDate: articleData.publishedDate,
     };
-    setArticles((prev) => [newArticle, ...prev]);
+    const updatedArticles = [newArticle, ...articles];
+    setArticles(updatedArticles);
+    localStorage.setItem('articles', JSON.stringify(updatedArticles));
   };
 
   return (

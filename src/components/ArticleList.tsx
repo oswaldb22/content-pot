@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { formatDistanceToNow } from "date-fns";
 
 interface Article {
   id: string;
@@ -10,6 +11,8 @@ interface Article {
   description?: string;
   image?: string;
   favicon?: string;
+  dateAdded: string;
+  publishedDate?: string;
 }
 
 interface ArticleListProps {
@@ -34,6 +37,7 @@ export function ArticleList({ articles }: ArticleListProps) {
                 description: data.data.description || '',
                 image: data.data.image?.url || '',
                 favicon: data.data.logo?.url || '',
+                publishedDate: data.data.date || article.publishedDate,
               };
             }
           } catch (error) {
@@ -87,11 +91,21 @@ export function ArticleList({ articles }: ArticleListProps) {
                   <CardTitle className="text-lg mb-1 text-gray-900">
                     {article.title || article.url}
                   </CardTitle>
-                  {article.category && (
-                    <span className="inline-block px-2 py-1 text-xs font-medium bg-gray-100 text-gray-600 rounded">
-                      {article.category}
+                  <div className="flex flex-wrap gap-2 mt-1">
+                    {article.category && (
+                      <span className="inline-block px-2 py-1 text-xs font-medium bg-gray-100 text-gray-600 rounded">
+                        {article.category}
+                      </span>
+                    )}
+                    <span className="text-xs text-gray-500">
+                      Added {formatDistanceToNow(new Date(article.dateAdded))} ago
                     </span>
-                  )}
+                    {article.publishedDate && (
+                      <span className="text-xs text-gray-500">
+                        Published {formatDistanceToNow(new Date(article.publishedDate))} ago
+                      </span>
+                    )}
+                  </div>
                 </div>
               </CardHeader>
               <CardContent>

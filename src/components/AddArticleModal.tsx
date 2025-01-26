@@ -7,7 +7,15 @@ import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 
 interface AddArticleModalProps {
-  onAddArticle: (article: { url: string; category: string }) => void;
+  onAddArticle: (article: { 
+    url: string; 
+    category?: string;
+    title?: string;
+    description?: string;
+    image?: string;
+    favicon?: string;
+    publishedDate?: string;
+  }) => void;
 }
 
 export function AddArticleModal({ onAddArticle }: AddArticleModalProps) {
@@ -38,6 +46,7 @@ export function AddArticleModal({ onAddArticle }: AddArticleModalProps) {
           description: data.data.description,
           image: data.data.image?.url,
           favicon: data.data.logo?.url,
+          publishedDate: data.data.date,
         });
       } else {
         onAddArticle({ url, category });
