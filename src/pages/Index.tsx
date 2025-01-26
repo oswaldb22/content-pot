@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { AddArticleModal } from "@/components/AddArticleModal";
 import { ArticleList } from "@/components/ArticleList";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 interface Article {
   id: string;
@@ -42,11 +43,14 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-background transition-colors duration-300">
       <div className="max-w-3xl mx-auto px-4 py-12">
         <div className="flex items-center justify-between mb-8">
-          <h1 className="text-3xl font-semibold text-gray-900">Reading List</h1>
-          <AddArticleModal onAddArticle={handleAddArticle} />
+          <h1 className="text-3xl font-semibold text-foreground">Reading List</h1>
+          <div className="flex items-center gap-4">
+            <ThemeToggle />
+            <AddArticleModal onAddArticle={handleAddArticle} />
+          </div>
         </div>
         <ArticleList articles={articles} />
       </div>

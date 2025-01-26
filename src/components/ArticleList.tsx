@@ -55,7 +55,7 @@ export function ArticleList({ articles }: ArticleListProps) {
   if (articles.length === 0) {
     return (
       <div className="text-center py-12">
-        <p className="text-gray-500">No articles saved yet. Add your first article to get started.</p>
+        <p className="text-muted-foreground">No articles saved yet. Add your first article to get started.</p>
       </div>
     );
   }
@@ -69,7 +69,7 @@ export function ArticleList({ articles }: ArticleListProps) {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, delay: index * 0.1 }}
         >
-          <Card className="hover:border-gray-300 transition-colors duration-300">
+          <Card className="hover:border-accent transition-colors duration-300">
             <a
               href={article.url}
               target="_blank"
@@ -88,20 +88,20 @@ export function ArticleList({ articles }: ArticleListProps) {
                   />
                 )}
                 <div className="flex-1">
-                  <CardTitle className="text-lg mb-1 text-gray-900">
+                  <CardTitle className="text-lg mb-1">
                     {article.title || article.url}
                   </CardTitle>
                   <div className="flex flex-wrap gap-2 mt-1">
                     {article.category && (
-                      <span className="inline-block px-2 py-1 text-xs font-medium bg-gray-100 text-gray-600 rounded">
+                      <span className="inline-block px-2 py-1 text-xs font-medium bg-secondary text-secondary-foreground rounded">
                         {article.category}
                       </span>
                     )}
-                    <span className="text-xs text-gray-500">
+                    <span className="text-xs text-muted-foreground">
                       Added {formatDistanceToNow(new Date(article.dateAdded))} ago
                     </span>
                     {article.publishedDate && (
-                      <span className="text-xs text-gray-500">
+                      <span className="text-xs text-muted-foreground">
                         Published {formatDistanceToNow(new Date(article.publishedDate))} ago
                       </span>
                     )}
@@ -110,7 +110,7 @@ export function ArticleList({ articles }: ArticleListProps) {
               </CardHeader>
               <CardContent>
                 {article.description && (
-                  <CardDescription className="text-sm text-gray-600 line-clamp-2">
+                  <CardDescription className="text-sm line-clamp-2">
                     {article.description}
                   </CardDescription>
                 )}
