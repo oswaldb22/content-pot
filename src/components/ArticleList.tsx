@@ -17,9 +17,10 @@ interface Article {
 
 interface ArticleListProps {
   articles: Article[];
+  displayStyle: 'full' | 'minimal';
 }
 
-export function ArticleList({ articles }: ArticleListProps) {
+export function ArticleList({ articles, displayStyle }: ArticleListProps) {
   const [enrichedArticles, setEnrichedArticles] = useState<Article[]>(articles);
 
   useEffect(() => {
@@ -76,57 +77,68 @@ export function ArticleList({ articles }: ArticleListProps) {
               rel="noopener noreferrer"
               className="block hover:opacity-80 transition-opacity"
             >
-              <CardHeader className="flex flex-row items-start space-x-4">
-                {article.favicon && (
-                  <img
-                    src={article.favicon}
-                    alt=""
-                    className="w-6 h-6 rounded"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).style.display = 'none';
-                    }}
-                  />
-                )}
-                <div className="flex-1">
-                  <CardTitle className="text-lg mb-1">
-                    {article.title || article.url}
-                  </CardTitle>
-                  <div className="flex flex-wrap gap-2 mt-1">
-                    {article.category && (
-                      <span className="inline-block px-2 py-1 text-xs font-medium bg-secondary text-secondary-foreground rounded">
-                        {article.category}
-                      </span>
-                    )}
-                    <span className="text-xs text-muted-foreground">
-                      Added {formatDistanceToNow(new Date(article.dateAdded))} ago
-                    </span>
-                    {article.publishedDate && (
-                      <span className="text-xs text-muted-foreground">
-                        Published {formatDistanceToNow(new Date(article.publishedDate))} ago
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                {article.description && (
-                  <CardDescription className="text-sm line-clamp-2">
-                    {article.description}
-                  </CardDescription>
-                )}
-                {article.image && (
-                  <div className="mt-4">
+              {displayStyle === 'full' ? (
+                <CardHeader className="flex flex-row items-start space-x-4">
+                  {article.favicon && (
                     <img
-                      src={article.image}
+                      src={article.favicon}
                       alt=""
-                      className="rounded-lg w-full h-48 object-cover"
+                      className="w-6 h-6 rounded"
                       onError={(e) => {
                         (e.target as HTMLImageElement).style.display = 'none';
                       }}
                     />
+                  )}
+                  <div className="flex-1">
+                    <CardTitle className="text-lg mb-1">
+                      {article.title || article.url}
+                    </CardTitle>
+                    <div className="flex flex-wrap gap-2 mt-1">
+                      {article.category && (
+                        <span className="inline-block px-2 py-1 text-xs font-medium bg-secondary text-secondary-foreground rounded">
+                          {article.category}
+                        </span>
+                      )}
+                      <span className="text-xs text-muted-foreground">
+                        Added {formatDistanceToNow(new Date(article.dateAdded))} ago
+                      </span>
+                    </div>
+                    {article.description && (
+                      <CardDescription className="mt-2 line-clamp-2">
+                        {article.description}
+                      </CardDescription>
+                    )}
                   </div>
-                )}
-              </CardContent>
+                </CardHeader>
+              ) : (
+                <CardHeader className="flex flex-row items-center space-x-4 py-3">
+                  {article.favicon && (
+                    <img
+                      src={article.favicon}
+                      alt=""
+                      className="w-4 h-4 rounded"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).style.display = 'none';
+                      }}
+                    />
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <CardTitle className="text-base truncate">
+                        {article.title || article.url}
+                      </CardTitle>
+                      {article.category && (
+                        <span className="inline-block px-2 py-0.5 text-xs font-medium bg-secondary text-secondary-foreground rounded whitespace-nowrap">
+                          {article.category}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <span className="text-xs text-muted-foreground whitespace-nowrap">
+                    {formatDistanceToNow(new Date(article.dateAdded))} ago
+                  </span>
+                </CardHeader>
+              )}
             </a>
           </Card>
         </motion.div>
