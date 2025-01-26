@@ -22,6 +22,7 @@ export function AddArticleModal({ onAddArticle }: AddArticleModalProps) {
   const [url, setUrl] = useState("");
   const [category, setCategory] = useState("");
   const [open, setOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -34,6 +35,7 @@ export function AddArticleModal({ onAddArticle }: AddArticleModalProps) {
       return;
     }
 
+    setIsLoading(true);
     try {
       const response = await fetch(`https://api.microlink.io?url=${encodeURIComponent(url)}`);
       const data = await response.json();
@@ -52,6 +54,7 @@ export function AddArticleModal({ onAddArticle }: AddArticleModalProps) {
         onAddArticle({ url, category });
       }
       
+      setIsLoading(false);
       setUrl("");
       setCategory("");
       setOpen(false);
@@ -62,6 +65,7 @@ export function AddArticleModal({ onAddArticle }: AddArticleModalProps) {
     } catch (error) {
       console.error('Error fetching metadata:', error);
       onAddArticle({ url, category });
+      setIsLoading(false);
       setUrl("");
       setCategory("");
       setOpen(false);
@@ -109,7 +113,9 @@ export function AddArticleModal({ onAddArticle }: AddArticleModalProps) {
               className="w-full"
             />
           </div>
-          <Button type="submit" className="w-full">Save Article</Button>
+          <Button type="submit" className="w-full" disabled={isLoading}>
+            {isLoading ? "Saving..." : "Save Article"}
+          </Button>
         </form>
       </DialogContent>
     </Dialog>
