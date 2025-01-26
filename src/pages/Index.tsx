@@ -7,17 +7,23 @@ interface Article {
   url: string;
   category?: string;
   title?: string;
+  description?: string;
+  image?: string;
+  favicon?: string;
 }
 
 const Index = () => {
   const [articles, setArticles] = useState<Article[]>([]);
 
-  const handleAddArticle = ({ url, category }: { url: string; category: string }) => {
+  const handleAddArticle = (articleData: Partial<Article>) => {
     const newArticle: Article = {
       id: Math.random().toString(36).substr(2, 9),
-      url,
-      category: category || undefined,
-      title: url, // In a real app, you'd fetch the title from the URL
+      url: articleData.url!,
+      category: articleData.category,
+      title: articleData.title,
+      description: articleData.description,
+      image: articleData.image,
+      favicon: articleData.favicon,
     };
     setArticles((prev) => [newArticle, ...prev]);
   };

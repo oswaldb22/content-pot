@@ -16,7 +16,7 @@ export function AddArticleModal({ onAddArticle }: AddArticleModalProps) {
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!url) {
       toast({
@@ -25,14 +25,42 @@ export function AddArticleModal({ onAddArticle }: AddArticleModalProps) {
       });
       return;
     }
-    onAddArticle({ url, category });
-    setUrl("");
-    setCategory("");
-    setOpen(false);
-    toast({
-      title: "Article saved successfully",
-      description: "Your article has been added to your reading list",
-    });
+
+    try {
+      const response = await fetch(`https://api.microlink.io?url=${encodeURIComponent(url)}`);
+      const data = await response.json();
+      
+      if (data.status === 'success') {
+        onAddArticle({
+          url,
+          category,
+          title: data.data.title,
+          description: data.data.description,
+          image: data.data.image?.url,
+          favicon: data.data.logo?.url,
+        });
+      } else {
+        onAddArticle({ url, category });
+      }
+      
+      setUrl("");
+      setCategory("");
+      setOpen(false);
+      toast({
+        title: "Article saved successfully",
+        description: "Your article has been added to your reading list",
+      });
+    } catch (error) {
+      console.error('Error fetching metadata:', error);
+      onAddArticle({ url, category });
+      setUrl("");
+      setCategory("");
+      setOpen(false);
+      toast({
+        title: "Article saved",
+        description: "Article saved without preview data",
+      });
+    }
   };
 
   return (
