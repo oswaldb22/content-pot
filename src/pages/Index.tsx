@@ -54,45 +54,61 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background transition-colors duration-300">
-      <div className="max-w-3xl mx-auto px-4 py-12">
-        <div className="flex items-center justify-between mb-8">
-          <h1 className="text-3xl font-semibold text-foreground">Reading List</h1>
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
+      <div className="max-w-4xl mx-auto px-6 py-16">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between space-y-6 sm:space-y-0 mb-12">
+          <div className="space-y-2">
+            <h1 className="text-4xl font-bold text-foreground tracking-tight">Reading List</h1>
+            <p className="text-muted-foreground text-sm">{articles.length} articles saved</p>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="flex items-center bg-muted rounded-lg p-1 gap-1">
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={() => updatePreference('displayStyle', 'full')}
-                className={preferences.displayStyle === 'full' ? 'bg-accent' : ''}
+                className={`transition-all duration-200 ${
+                  preferences.displayStyle === 'full' 
+                    ? 'bg-background shadow-sm hover:bg-background/90' 
+                    : 'hover:bg-background/50'
+                }`}
               >
-                <LayoutGrid className="h-5 w-5" />
+                <LayoutGrid className="h-4 w-4" />
               </Button>
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={() => updatePreference('displayStyle', 'minimal')}
-                className={preferences.displayStyle === 'minimal' ? 'bg-accent' : ''}
+                className={`transition-all duration-200 ${
+                  preferences.displayStyle === 'minimal' 
+                    ? 'bg-background shadow-sm hover:bg-background/90' 
+                    : 'hover:bg-background/50'
+                }`}
               >
-                <List className="h-5 w-5" />
+                <List className="h-4 w-4" />
               </Button>
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={() => updatePreference('sortOrder', preferences.sortOrder === 'newest' ? 'oldest' : 'newest')}
-                className="ml-2"
+                className={`transition-all duration-200 hover:bg-background/50`}
+                title={`Sort by ${preferences.sortOrder === 'newest' ? 'oldest' : 'newest'} first`}
               >
                 {preferences.sortOrder === 'newest' ? (
-                  <SortDesc className="h-5 w-5" />
+                  <SortDesc className="h-4 w-4" />
                 ) : (
-                  <SortAsc className="h-5 w-5" />
+                  <SortAsc className="h-4 w-4" />
                 )}
               </Button>
             </div>
-            <ThemeToggle />
-            <AddArticleModal onAddArticle={handleAddArticle} />
+            <div className="flex items-center gap-3">
+              <ThemeToggle />
+              <AddArticleModal onAddArticle={handleAddArticle} />
+            </div>
           </div>
         </div>
-        <ArticleList articles={sortedArticles} displayStyle={preferences.displayStyle} />
+        <div className="transition-all duration-300">
+          <ArticleList articles={sortedArticles} displayStyle={preferences.displayStyle} />
+        </div>
       </div>
     </div>
   );
