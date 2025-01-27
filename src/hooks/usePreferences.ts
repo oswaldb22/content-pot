@@ -3,19 +3,41 @@ import { useState, useEffect } from 'react';
 interface Preferences {
   displayStyle: 'full' | 'minimal';
   sortOrder: 'newest' | 'oldest';
-  readFilter: 'all' | 'read' | 'unread';
+  filters: {
+    status: ('active' | 'archived')[];
+    read: ('read' | 'unread')[];
+  };
 }
 
 const DEFAULT_PREFERENCES: Preferences = {
   displayStyle: 'full',
   sortOrder: 'newest',
-  readFilter: 'all',
+  filters: {
+    status: ['active'],
+    read: ['read', 'unread'],
+  },
 };
 
 export function usePreferences() {
   const [preferences, setPreferences] = useState<Preferences>(() => {
-    const savedPreferences = localStorage.getItem('preferences');
-    return savedPreferences ? JSON.parse(savedPreferences) : DEFAULT_PREFERENCES;
+    try {
+      const savedPreferences = localStorage.getItem('preferences');
+      if (savedPreferences) {
+        const parsed = JSON.parse(savedPreferences);
+        // Ensure all required fields exist
+        return {
+          ...DEFAULT_PREFERENCES,
+          ...parsed,
+          filters: {
+            ...DEFAULT_PREFERENCES.filters,
+            ...parsed.filters,
+          },
+        };
+      }
+    } catch (error) {
+      console.error('Error loading preferences:', error);
+    }
+    return DEFAULT_PREFERENCES;
   });
 
   useEffect(() => {
