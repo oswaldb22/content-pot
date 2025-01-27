@@ -8,8 +8,15 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { MoreVertical, Archive, Trash2, ArchiveRestore } from "lucide-react";
 
-interface Article {
+export interface Article {
   id: string;
   url: string;
   category?: string;
@@ -20,15 +27,18 @@ interface Article {
   dateAdded: string;
   publishedDate?: string;
   read: boolean;
+  status: 'active' | 'archived' | 'deleted';
 }
 
-interface ArticleListProps {
+export interface ArticleListProps {
   articles: Article[];
   displayStyle: 'full' | 'minimal';
   toggleReadStatus: (articleId: string) => void;
+  onArchive: (articleId: string) => void;
+  onDelete: (articleId: string) => void;
 }
 
-export function ArticleList({ articles, displayStyle, toggleReadStatus }: ArticleListProps) {
+export function ArticleList({ articles, displayStyle, toggleReadStatus, onArchive, onDelete }: ArticleListProps) {
   const [enrichedArticles, setEnrichedArticles] = useState<Article[]>(articles);
 
   useEffect(() => {
@@ -70,7 +80,7 @@ export function ArticleList({ articles, displayStyle, toggleReadStatus }: Articl
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-2">
       {enrichedArticles.map((article, index) => (
         <motion.div
           key={article.id}
@@ -78,77 +88,50 @@ export function ArticleList({ articles, displayStyle, toggleReadStatus }: Articl
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, delay: index * 0.1 }}
         >
-          <Card className={`hover:border-accent transition-colors duration-300 ${article.read ? 'bg-muted/50' : ''}`}>
-            <div className="flex items-start">
-              <a
-                href={article.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="block hover:opacity-80 transition-opacity flex-1"
-              >
-                {displayStyle === 'full' ? (
-                  <CardHeader className="flex flex-row items-start space-x-4">
-                    {article.favicon && (
-                      <img
-                        src={article.favicon}
-                        alt=""
-                        className="w-6 h-6 rounded"
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).style.display = 'none';
-                        }}
-                      />
-                    )}
-                    <div className="flex-1">
-                      <CardTitle className="text-lg mb-1">
-                        {article.title || article.url}
-                      </CardTitle>
-                      <div className="flex flex-wrap gap-2 mt-1">
-                        {article.category && (
-                          <span className="inline-block px-2 py-1 text-xs font-medium bg-secondary text-secondary-foreground rounded">
-                            {article.category}
-                          </span>
-                        )}
-                        <span className="text-xs text-muted-foreground">
-                          Added {formatDistanceToNow(new Date(article.dateAdded))} ago
-                        </span>
-                      </div>
-                      {article.description && (
-                        <CardDescription className="mt-2 line-clamp-2">
-                          {article.description}
-                        </CardDescription>
-                      )}
-                    </div>
-                  </CardHeader>
-                ) : (
-                  <CardHeader className="flex flex-row items-center space-x-4 py-3">
-                    {article.favicon && (
-                      <img
-                        src={article.favicon}
-                        alt=""
-                        className="w-4 h-4 rounded"
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).style.display = 'none';
-                        }}
-                      />
-                    )}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <CardTitle className="text-base truncate">
-                          {article.title || article.url}
-                        </CardTitle>
-                        {article.category && (
-                          <span className="inline-block px-2 py-0.5 text-xs font-medium bg-secondary text-secondary-foreground rounded whitespace-nowrap">
-                            {article.category}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                    <span className="text-xs text-muted-foreground whitespace-nowrap">
-                      {formatDistanceToNow(new Date(article.dateAdded))} ago
+          <div className={`flex items-start p-4 border rounded-lg 
+            hover:border-primary/40 hover:bg-accent/50 
+            transition-all duration-300 ease-in-out transform hover:-translate-y-[2px]
+            ${article.read ? 'bg-muted/30' : 'bg-background'}
+          `}>
+            <a
+              href={article.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-start gap-3 flex-1 min-w-0 group"
+            >
+              {article.favicon && (
+                <img
+                  src={article.favicon}
+                  alt=""
+                  className="w-5 h-5 rounded flex-shrink-0 mt-1 transition-all duration-300"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).style.display = 'none';
+                  }}
+                />
+              )}
+              <div className="flex-1 min-w-0">
+                <h3 className="font-medium text-base leading-6 truncate group-hover:text-primary transition-colors duration-300">
+                  {article.title || article.url}
+                </h3>
+                <div className="flex items-center gap-2 mt-1">
+                  {article.category && (
+                    <span className="inline-flex items-center px-2 py-0.5 text-xs font-medium bg-secondary text-secondary-foreground rounded">
+                      {article.category}
                     </span>
-                  </CardHeader>
+                  )}
+                  <span className="text-xs text-muted-foreground">
+                    {formatDistanceToNow(new Date(article.dateAdded))} ago
+                  </span>
+                </div>
+                {displayStyle === 'full' && article.description && (
+                  <p className="text-sm text-muted-foreground line-clamp-2 mt-1">
+                    {article.description}
+                  </p>
                 )}
-              </a>
+              </div>
+            </a>
+
+            <div className="flex items-center gap-1 flex-shrink-0 ml-4">
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -157,14 +140,14 @@ export function ArticleList({ articles, displayStyle, toggleReadStatus }: Articl
                         e.preventDefault();
                         toggleReadStatus(article.id);
                       }}
-                      className={`p-2 m-2 rounded-full hover:bg-accent/10 transition-colors ${
+                      className={`p-2 rounded-full hover:bg-accent/10 transition-colors ${
                         article.read ? 'text-accent' : 'text-muted-foreground/50'
                       }`}
                     >
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
-                        width="20"
-                        height="20"
+                        width="16"
+                        height="16"
                         viewBox="0 0 24 24"
                         fill="none"
                         stroke="currentColor"
@@ -191,9 +174,42 @@ export function ArticleList({ articles, displayStyle, toggleReadStatus }: Articl
                     <p>{article.read ? "Mark as unread" : "Mark as read"}</p>
                   </TooltipContent>
                 </Tooltip>
+
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button className="p-2 rounded-full hover:bg-accent/10 transition-colors text-muted-foreground/50">
+                      <MoreVertical className="h-4 w-4" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem
+                      onClick={() => onArchive(article.id)}
+                      className="flex items-center gap-2"
+                    >
+                      {article.status === 'archived' ? (
+                        <>
+                          <ArchiveRestore className="h-4 w-4" />
+                          <span>Unarchive</span>
+                        </>
+                      ) : (
+                        <>
+                          <Archive className="h-4 w-4" />
+                          <span>Archive</span>
+                        </>
+                      )}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => onDelete(article.id)}
+                      className="flex items-center gap-2 text-red-600"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      <span>Delete</span>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </TooltipProvider>
             </div>
-          </Card>
+          </div>
         </motion.div>
       ))}
     </div>
