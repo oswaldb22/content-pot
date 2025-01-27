@@ -27,7 +27,8 @@ export interface Article {
   dateAdded: string;
   publishedDate?: string;
   read: boolean;
-  status: 'active' | 'archived' | 'deleted';
+  status: 'active' | 'archived';
+  deleted: boolean;
 }
 
 export interface ArticleListProps {
