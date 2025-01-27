@@ -4,6 +4,7 @@ interface Preferences {
   displayStyle: 'full' | 'minimal';
   sortOrder: 'newest' | 'oldest';
   filters: {
+    domains: string[];
     status: ('active' | 'archived')[];
     read: ('read' | 'unread')[];
   };
@@ -13,6 +14,7 @@ const DEFAULT_PREFERENCES: Preferences = {
   displayStyle: 'full',
   sortOrder: 'newest',
   filters: {
+    domains: [],
     status: ['active'],
     read: ['read', 'unread'],
   },
