@@ -70,12 +70,12 @@ export function ArticleList({ articles, displayStyle }: ArticleListProps) {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, delay: index * 0.1 }}
         >
-          <Card className="hover:border-accent transition-colors duration-300">
+          <Card className="group hover:border-primary/50 hover:bg-accent/50 transition-all duration-300 ease-in-out transform hover:-translate-y-1">
             <a
               href={article.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="block hover:opacity-80 transition-opacity"
+              className="block"
             >
               {displayStyle === 'full' ? (
                 <CardHeader className="flex flex-row items-start space-x-4">
@@ -90,7 +90,7 @@ export function ArticleList({ articles, displayStyle }: ArticleListProps) {
                     />
                   )}
                   <div className="flex-1">
-                    <CardTitle className="text-lg mb-1">
+                    <CardTitle className="text-lg mb-1 group-hover:text-primary transition-colors duration-300">
                       {article.title || article.url}
                     </CardTitle>
                     <div className="flex flex-wrap gap-2 mt-1">
@@ -124,7 +124,7 @@ export function ArticleList({ articles, displayStyle }: ArticleListProps) {
                   )}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <CardTitle className="text-base truncate">
+                      <CardTitle className="text-base truncate group-hover:text-primary transition-colors duration-300">
                         {article.title || article.url}
                       </CardTitle>
                       {article.category && (
