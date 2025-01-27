@@ -163,49 +163,34 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background transition-colors duration-300">
-      <div className="max-w-4xl mx-auto px-6 py-12">
-        <div className="space-y-3 mb-12">
-          <h1 className="text-4xl font-bold text-foreground tracking-tight bg-clip-text">
-            Reading List
-          </h1>
-          <p className="text-sm text-muted-foreground/80">
-            {sortedArticles.length} article
-            {sortedArticles.length !== 1 ? "s" : ""} saved
-            {preferences.filters.domains.length > 0 && (
-              <span className="inline-flex items-center">
-                <span className="mx-2 text-muted-foreground/40">•</span>
-                filtered by{" "}
-                {preferences.filters.domains.length === 1
-                  ? "domain"
-                  : "domains"}
+      <div className="container max-w-[50%] mx-auto py-8 px-4">
+        <div className="flex items-center justify-between mb-8">
+          <h1 className="text-3xl font-bold">Article Bundle</h1>
+          <div className="flex items-center gap-4">
+            <AddArticleModal onAddArticle={handleAddArticle} />
+            <ThemeToggle />
+          </div>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-4 mb-6">
+          <p className="text-sm text-muted-foreground">
+            {filteredArticles.length} articles
+            {preferences.filters.domains.length === 1 && (
+              <span>
+                {" "}
+                from{" "}
+                <span className="font-medium text-muted-foreground">
+                  {preferences.filters.domains[0]}
+                </span>
               </span>
             )}
-            {preferences.filters.status.length > 0 && (
-              <span className="inline-flex items-center">
-                <span className="mx-2 text-muted-foreground/40">•</span>
-                {preferences.filters.status.length === 1 ? (
-                  <span className="font-medium text-muted-foreground ml-1">
-                    {preferences.filters.status[0]}
-                  </span>
-                ) : (
-                  <span className="font-medium text-muted-foreground ml-1">
-                    multiple statuses
-                  </span>
-                )}
-              </span>
-            )}
-            {preferences.filters.read.length > 0 && (
-              <span className="inline-flex items-center">
-                <span className="mx-2 text-muted-foreground/40">•</span>
-                {preferences.filters.read.length === 1 ? (
-                  <span className="font-medium text-muted-foreground ml-1">
-                    {preferences.filters.read[0]}
-                  </span>
-                ) : (
-                  <span className="font-medium text-muted-foreground ml-1">
-                    multiple read statuses
-                  </span>
-                )}
+            {preferences.filters.read.length === 1 && (
+              <span>
+                {" "}
+                marked as{" "}
+                <span className="font-medium text-muted-foreground">
+                  {preferences.filters.read[0]}
+                </span>
               </span>
             )}
             <span className="mx-2 text-muted-foreground/40">•</span>
@@ -213,109 +198,102 @@ const Index = () => {
           </p>
         </div>
 
-        <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-12 border-b pb-6">
-          <div className="flex-1 flex items-center gap-3">
-            <MultiSelectFilter
-              title="Domains"
-              options={getUniqueDomains().map((domain) => ({
-                label: domain,
-                value: domain,
-                icon: Globe,
-              }))}
-              selectedValues={preferences.filters.domains}
-              onChange={(domains) => {
-                updatePreference("filters", {
-                  ...preferences.filters,
-                  domains,
-                });
-              }}
-            />
+        <div className="flex flex-wrap gap-3 mb-8 pb-6 border-b">
+          <MultiSelectFilter
+            title="Domains"
+            options={getUniqueDomains().map((domain) => ({
+              label: domain,
+              value: domain,
+              icon: Globe,
+            }))}
+            selectedValues={preferences.filters.domains}
+            onChange={(domains) => {
+              updatePreference("filters", {
+                ...preferences.filters,
+                domains,
+              });
+            }}
+          />
 
-            <MultiSelectFilter
-              title="Status"
-              options={[
-                { label: "Active", value: "active", icon: Clock },
-                { label: "Archived", value: "archived", icon: Archive },
-              ]}
-              selectedValues={preferences?.filters?.status || []}
-              onChange={(values) => {
-                updatePreference("filters", {
-                  ...preferences.filters,
-                  status: values.length
-                    ? (values as ("active" | "archived")[])
-                    : ["active"], // Default to active if nothing selected
-                });
-              }}
-            />
+          <MultiSelectFilter
+            title="Status"
+            options={[
+              { label: "Active", value: "active", icon: Clock },
+              { label: "Archived", value: "archived", icon: Archive },
+            ]}
+            selectedValues={preferences?.filters?.status || []}
+            onChange={(values) => {
+              updatePreference("filters", {
+                ...preferences.filters,
+                status: values.length
+                  ? (values as ("active" | "archived")[])
+                  : ["active"], // Default to active if nothing selected
+              });
+            }}
+          />
 
-            <MultiSelectFilter
-              title="Read Status"
-              options={[
-                { label: "Read", value: "read", icon: CheckCircle2 },
-                { label: "Unread", value: "unread", icon: Clock },
-              ]}
-              selectedValues={preferences?.filters?.read || []}
-              onChange={(values) => {
-                updatePreference("filters", {
-                  ...preferences.filters,
-                  read: values.length
-                    ? (values as ("unread" | "read")[])
-                    : ["unread", "read"], // Default to both if nothing selected
-                });
-              }}
-            />
+          <MultiSelectFilter
+            title="Read Status"
+            options={[
+              { label: "Read", value: "read", icon: CheckCircle2 },
+              { label: "Unread", value: "unread", icon: Clock },
+            ]}
+            selectedValues={preferences?.filters?.read || []}
+            onChange={(values) => {
+              updatePreference("filters", {
+                ...preferences.filters,
+                read: values.length
+                  ? (values as ("unread" | "read")[])
+                  : ["unread", "read"], // Default to both if nothing selected
+              });
+            }}
+          />
 
-            <div className="flex items-center bg-muted/50 rounded-lg p-1 gap-1 h-9">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => updatePreference("displayStyle", "full")}
-                className={`h-7 w-7 transition-all duration-200 ${
-                  preferences.displayStyle === "full"
-                    ? "bg-background shadow-sm hover:bg-background/90"
-                    : "hover:bg-background/50"
-                }`}
-              >
-                <LayoutGrid className="h-3.5 w-3.5" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => updatePreference("displayStyle", "minimal")}
-                className={`h-7 w-7 transition-all duration-200 ${
-                  preferences.displayStyle === "minimal"
-                    ? "bg-background shadow-sm hover:bg-background/90"
-                    : "hover:bg-background/50"
-                }`}
-              >
-                <List className="h-3.5 w-3.5" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() =>
-                  updatePreference(
-                    "sortOrder",
-                    preferences.sortOrder === "newest" ? "oldest" : "newest"
-                  )
-                }
-                className={`h-7 w-7 transition-all duration-200 hover:bg-background/50`}
-                title={`Sort by ${
+          <div className="flex items-center bg-muted/50 rounded-lg p-1 gap-1 h-9">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => updatePreference("displayStyle", "full")}
+              className={`h-7 w-7 transition-all duration-200 ${
+                preferences.displayStyle === "full"
+                  ? "bg-background shadow-sm hover:bg-background/90"
+                  : "hover:bg-background/50"
+              }`}
+            >
+              <LayoutGrid className="h-3.5 w-3.5" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => updatePreference("displayStyle", "minimal")}
+              className={`h-7 w-7 transition-all duration-200 ${
+                preferences.displayStyle === "minimal"
+                  ? "bg-background shadow-sm hover:bg-background/90"
+                  : "hover:bg-background/50"
+              }`}
+            >
+              <List className="h-3.5 w-3.5" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() =>
+                updatePreference(
+                  "sortOrder",
                   preferences.sortOrder === "newest" ? "oldest" : "newest"
-                } first`}
-              >
-                {preferences.sortOrder === "newest" ? (
-                  <SortDesc className="h-3.5 w-3.5" />
-                ) : (
-                  <SortAsc className="h-3.5 w-3.5" />
-                )}
-              </Button>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <ThemeToggle />
-            <AddArticleModal onAddArticle={handleAddArticle} />
+                )
+              }
+              className={`h-7 w-7 transition-all duration-200 hover:bg-background/50`}
+              title={`Sort by ${
+                preferences.sortOrder === "newest" ? "oldest" : "newest"
+              } first`}
+            >
+              {preferences.sortOrder === "newest" ? (
+                <SortDesc className="h-3.5 w-3.5" />
+              ) : (
+                <SortAsc className="h-3.5 w-3.5" />
+              )}
+            </Button>
           </div>
         </div>
 
