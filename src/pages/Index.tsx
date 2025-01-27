@@ -13,6 +13,7 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { usePreferences } from "@/hooks/usePreferences";
 import { MultiSelectFilter } from "@/components/MultiSelectFilter";
 
@@ -297,15 +298,17 @@ const Index = () => {
           </div>
         </div>
 
-        <div className="transition-all duration-300">
+        <ScrollArea className="h-[calc(100vh-16rem)] w-full rounded-md">
+        <div className="pr-4">
           <ArticleList
-            articles={sortedArticles}
+            articles={filteredArticles}
             displayStyle={preferences.displayStyle}
             toggleReadStatus={toggleReadStatus}
             onArchive={handleArchiveArticle}
             onDelete={handleDeleteArticle}
           />
-        </div>
+          </div>
+        </ScrollArea>
       </div>
     </div>
   );
