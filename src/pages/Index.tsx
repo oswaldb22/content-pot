@@ -35,7 +35,6 @@ interface Article {
 const Index = () => {
   const [articles, setArticles] = useState<Article[]>([]);
   const { preferences, updatePreference } = usePreferences();
-  const [showArchived, setShowArchived] = useState<boolean>(false);
 
   useEffect(() => {
     const savedArticles = localStorage.getItem("articles");
@@ -86,22 +85,10 @@ const Index = () => {
     setArticles((prev) => [...prev, newArticle]);
   };
 
-  console.log(preferences);
   const filteredArticles = articles.filter((article) => {
     // Skip deleted articles
-    console.log({
-      description: article.description,
-      deleted: article.deleted,
-    });
     if (article.deleted) return false;
-    console.log({
-      description: article.description,
-      deleted: article.deleted,
-      status: article.status,
-      url: article.url,
-      domains: extractDomain(article.url),
-      read: article.read,
-    });
+
     // Status filter (active/archived)
     const hasStatusFilter = preferences?.filters?.status?.length > 0;
     if (
@@ -298,18 +285,18 @@ const Index = () => {
           </div>
         </div>
 
-        <ScrollArea className="h-[calc(100vh-16rem)] w-full rounded-md">
-        <div className="pr-4">
+        {/* <ScrollArea className="h-[calc(100vh-16rem)] w-full rounded-md">
+        <div className="pr-4"> */}
           <ArticleList
-            articles={filteredArticles}
+            articles={sortedArticles}
             displayStyle={preferences.displayStyle}
             toggleReadStatus={toggleReadStatus}
             onArchive={handleArchiveArticle}
             onDelete={handleDeleteArticle}
           />
           </div>
-        </ScrollArea>
-      </div>
+        {/* </ScrollArea>
+      </div> */}
     </div>
   );
 };
