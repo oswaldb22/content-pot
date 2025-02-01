@@ -153,7 +153,7 @@ const Index = () => {
     <div className="min-h-screen bg-background transition-colors duration-300">
       <div className="container max-w-[50%] mx-auto py-8 px-4">
         <div className="flex items-center justify-between mb-8">
-          <h1 className="text-3xl font-bold">Article Bundle</h1>
+          <h1 className="text-3xl font-bold">Content Pot</h1>
           <div className="flex items-center gap-4">
             <AddArticleModal onAddArticle={handleAddArticle} />
             <ThemeToggle />
