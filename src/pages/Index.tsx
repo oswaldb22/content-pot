@@ -83,6 +83,15 @@ const Index = () => {
       deleted: false,
     };
 
+    const domain = extractDomain(articleData.url!);
+  
+    if (domain && !preferences.filters.domains.includes(domain)) {
+      updatePreference('filters', {
+        ...preferences.filters,
+        domains: [...preferences.filters.domains, domain]
+      });
+    }
+
     setArticles((prev) => [...prev, newArticle]);
   };
 
