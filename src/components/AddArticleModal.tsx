@@ -84,7 +84,7 @@ export function AddArticleModal({ onAddArticle }: AddArticleModalProps) {
           className="group hover:border-gray-400 transition-colors duration-300"
         >
           <PlusCircle className="mr-2 h-4 w-4 group-hover:text-gray-600" />
-          Add Article
+          Add
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px] animate-fade-in">
