@@ -161,7 +161,7 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background transition-colors duration-300">
-      <div className="container max-w-[50%] mx-auto py-8 px-4">
+      <div className="container max-w-5xl mx-auto py-8 px-4">
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-2">
             <h1 className="text-3xl font-bold">contentPot</h1>
