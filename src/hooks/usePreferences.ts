@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 
-interface Preferences {
+export interface Preferences {
   displayStyle: 'full' | 'minimal';
   sortOrder: 'newest' | 'oldest';
   filters: {
