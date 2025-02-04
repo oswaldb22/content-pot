@@ -13,7 +13,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { MoreVertical, Archive, Trash2, ArchiveRestore } from "lucide-react";
+import { MoreVertical, Archive, Trash2, ArchiveRestore, RefreshCcw } from "lucide-react";
 
 export interface Article {
   id: string;
@@ -36,6 +36,7 @@ export interface ArticleListProps {
   toggleReadStatus: (articleId: string) => void;
   onArchive: (articleId: string) => void;
   onDelete: (articleId: string) => void;
+  onRefreshMetadata?: (articleId: string) => void;
 }
 
 export function ArticleList({
@@ -44,6 +45,7 @@ export function ArticleList({
   toggleReadStatus,
   onArchive,
   onDelete,
+  onRefreshMetadata,
 }: ArticleListProps) {
   const [enrichedArticles, setEnrichedArticles] = useState<Article[]>(articles);
 
@@ -223,6 +225,13 @@ export function ArticleList({
                           <span>Archive</span>
                         </>
                       )}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => onRefreshMetadata?.(article.id)}
+                      className="flex items-center gap-2"
+                    >
+                      <RefreshCcw className="h-4 w-4" />
+                      <span>Refresh Metadata</span>
                     </DropdownMenuItem>
                     <DropdownMenuItem
                       onClick={() => onDelete(article.id)}
