@@ -84,11 +84,11 @@ const Index = () => {
     };
 
     const domain = extractDomain(articleData.url!);
-  
+
     if (domain && !preferences.filters.domains.includes(domain)) {
-      updatePreference('filters', {
+      updatePreference("filters", {
         ...preferences.filters,
-        domains: [...preferences.filters.domains, domain]
+        domains: [...preferences.filters.domains, domain],
       });
     }
 
@@ -157,6 +157,39 @@ const Index = () => {
       article.id === articleId ? { ...article, read: !article.read } : article
     );
     setArticles(updatedArticles);
+  };
+
+  const handleRefreshMetadata = async (articleId: string) => {
+    const article = articles.find((a) => a.id === articleId);
+    if (!article || !article.url) {
+      console.error("Invalid article or url");
+      return;
+    }
+
+    const { url, category } = article;
+
+    const response = await fetch(
+      `https://api.microlink.io?url=${encodeURIComponent(url)}`
+    );
+    const data = await response.json();
+
+    if (data.status === "success") {
+      setArticles((prev) =>
+        prev.map((article) =>
+          article.id === articleId
+            ? {
+                ...article,
+                category,
+                title: data.data.title,
+                description: data.data.description,
+                image: data.data.image?.url,
+                favicon: data.data.logo?.url,
+                publishedDate: data.data.date,
+              }
+            : article
+        )
+      );
+    }
   };
 
   return (
@@ -300,15 +333,16 @@ const Index = () => {
 
         {/* <ScrollArea className="h-[calc(100vh-16rem)] w-full rounded-md">
         <div className="pr-4"> */}
-          <ArticleList
-            articles={sortedArticles}
-            displayStyle={preferences.displayStyle}
-            toggleReadStatus={toggleReadStatus}
-            onArchive={handleArchiveArticle}
-            onDelete={handleDeleteArticle}
-          />
-          </div>
-        {/* </ScrollArea>
+        <ArticleList
+          articles={sortedArticles}
+          displayStyle={preferences.displayStyle}
+          toggleReadStatus={toggleReadStatus}
+          onArchive={handleArchiveArticle}
+          onDelete={handleDeleteArticle}
+          onRefreshMetadata={handleRefreshMetadata}
+        />
+      </div>
+      {/* </ScrollArea>
       </div> */}
     </div>
   );
