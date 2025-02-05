@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
-import { Article } from "@/components/ArticleList";
+import { saveArticle } from "@/lib/article";
 
 const AddUrl = () => {
   const navigate = useNavigate();
@@ -12,7 +12,7 @@ const AddUrl = () => {
   const [status, setStatus] = useState("Initializing...");
 
   useEffect(() => {
-    const saveArticle = async () => {
+    const handleSaveArticle = async () => {
       // Get everything after /add/
       const urlPath = location.pathname.replace("/add/", "");
       if (!urlPath) {
@@ -24,90 +24,36 @@ const AddUrl = () => {
 
       const validUrl = decodeURIComponent(urlPath);
 
-      // Check if article already exists
-      const savedArticles = localStorage.getItem("articles");
-      const articles = savedArticles ? JSON.parse(savedArticles) : [];
-      const articleExists = articles.some(
-        (article: Article) => article.url === validUrl && !article.deleted
-      );
-
-      if (articleExists) {
-        toast({
-          title: "Article already exists",
-          description: "This article is already in your reading list",
-        });
-        navigate("/", { replace: true });
-        return;
-      }
-
       try {
-        setStatus("Fetching article metadata...");
-
-        const response = await fetch(
-          `https://api.microlink.io?url=${encodeURIComponent(validUrl)}`
-        );
-        const data = await response.json();
-
         setStatus("Saving article...");
-
-        const newArticle: Article = {
-          id: crypto.randomUUID(),
-          url: validUrl,
-          title: data.status === "success" ? data.data.title : undefined,
-          description:
-            data.status === "success" ? data.data.description : undefined,
-          image: data.status === "success" ? data.data.image?.url : undefined,
-          favicon: data.status === "success" ? data.data.logo?.url : undefined,
-          publishedDate: data.status === "success" ? data.data.date : undefined,
-          dateAdded: new Date().toISOString(),
-          read: false,
-          status: "active",
-          deleted: false,
-        };
-
-        const savedArticles = localStorage.getItem("articles");
-        const articles = savedArticles ? JSON.parse(savedArticles) : [];
-
-        localStorage.setItem(
-          "articles",
-          JSON.stringify([...articles, newArticle])
-        );
-
+        await saveArticle(validUrl);
         toast({
           title: "Article saved successfully",
           description: "Your article has been added to your reading list",
         });
       } catch (error) {
         console.error("Error saving article:", error);
-        setStatus("Saving article without metadata...");
-
-        const newArticle: Article = {
-          id: crypto.randomUUID(),
-          url: validUrl,
-          dateAdded: new Date().toISOString(),
-          read: false,
-          status: "active",
-          deleted: false,
-        };
-
-        const savedArticles = localStorage.getItem("articles");
-        const articles = savedArticles ? JSON.parse(savedArticles) : [];
-        localStorage.setItem(
-          "articles",
-          JSON.stringify([...articles, newArticle])
-        );
-
-        toast({
-          title: "Article saved",
-          description: "Article saved without preview data",
-        });
+        if (
+          error instanceof Error &&
+          error.message === "Article already exists in your reading list"
+        ) {
+          toast({
+            title: "Article already exists",
+            description: "This article is already in your reading list",
+          });
+        } else {
+          toast({
+            title: "Article saved",
+            description: "Article saved without preview data",
+          });
+        }
       }
 
       setStatus("Redirecting to home...");
       navigate("/", { replace: true });
     };
 
-    saveArticle();
+    handleSaveArticle();
   }, [location.pathname, navigate, toast]);
 
   return (

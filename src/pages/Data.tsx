@@ -1,4 +1,4 @@
-import { Article } from "@/components/ArticleList";
+import { Article } from "@/lib/types";
 import { Preferences } from "@/hooks/usePreferences";
 import { useEffect, useState } from "react";
 

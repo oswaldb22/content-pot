@@ -18,20 +18,12 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { usePreferences } from "@/hooks/usePreferences";
 import { MultiSelectFilter } from "@/components/MultiSelectFilter";
 
-interface Article {
-  id: string;
-  url: string;
-  category?: string;
-  title?: string;
-  description?: string;
-  image?: string;
-  favicon?: string;
-  dateAdded: string;
-  publishedDate?: string;
-  read: boolean;
-  status: "active" | "archived";
-  deleted: boolean;
-}
+import { Article } from "@/lib/types";
+import {
+  extractDomain,
+  saveArticle,
+  refreshArticleMetadata,
+} from "@/lib/article";
 
 const Index = () => {
   const [articles, setArticles] = useState<Article[]>([]);
@@ -53,46 +45,29 @@ const Index = () => {
     localStorage.setItem("articles", JSON.stringify(articles));
   }, [articles]);
 
-  const extractDomain = (url: string): string => {
-    try {
-      const domain = new URL(url).hostname.replace("www.", "");
-      return domain;
-    } catch {
-      return url;
-    }
-  };
-
   const getUniqueDomains = (): string[] => {
     const domains = articles.map((article) => extractDomain(article.url));
     return [...new Set(domains)].sort();
   };
 
-  const handleAddArticle = (articleData: Partial<Article>) => {
-    const newArticle: Article = {
-      id: crypto.randomUUID(),
-      url: articleData.url!,
-      category: articleData.category,
-      title: articleData.title,
-      description: articleData.description,
-      image: articleData.image,
-      favicon: articleData.favicon,
-      dateAdded: new Date().toISOString(),
-      publishedDate: articleData.publishedDate,
-      read: false,
-      status: "active",
-      deleted: false,
-    };
+  const handleAddArticle = async (articleData: Partial<Article>) => {
+    if (!articleData.url) return;
 
-    const domain = extractDomain(articleData.url!);
+    try {
+      const newArticle = await saveArticle(articleData.url, articleData);
+      const domain = extractDomain(articleData.url);
 
-    if (domain && !preferences.filters.domains.includes(domain)) {
-      updatePreference("filters", {
-        ...preferences.filters,
-        domains: [...preferences.filters.domains, domain],
-      });
+      if (domain && !preferences.filters.domains.includes(domain)) {
+        updatePreference("filters", {
+          ...preferences.filters,
+          domains: [...preferences.filters.domains, domain],
+        });
+      }
+
+      setArticles((prev) => [...prev, newArticle]);
+    } catch (error) {
+      console.error("Error adding article:", error);
     }
-
-    setArticles((prev) => [...prev, newArticle]);
   };
 
   const filteredArticles = articles.filter((article) => {
@@ -161,34 +136,15 @@ const Index = () => {
 
   const handleRefreshMetadata = async (articleId: string) => {
     const article = articles.find((a) => a.id === articleId);
-    if (!article || !article.url) {
-      console.error("Invalid article or url");
-      return;
-    }
+    if (!article) return;
 
-    const { url, category } = article;
-
-    const response = await fetch(
-      `https://api.microlink.io?url=${encodeURIComponent(url)}`
-    );
-    const data = await response.json();
-
-    if (data.status === "success") {
+    try {
+      const updatedArticle = await refreshArticleMetadata(article);
       setArticles((prev) =>
-        prev.map((article) =>
-          article.id === articleId
-            ? {
-                ...article,
-                category,
-                title: data.data.title,
-                description: data.data.description,
-                image: data.data.image?.url,
-                favicon: data.data.logo?.url,
-                publishedDate: data.data.date,
-              }
-            : article
-        )
+        prev.map((a) => (a.id === articleId ? updatedArticle : a))
       );
+    } catch (error) {
+      console.error("Error refreshing metadata:", error);
     }
   };
 
