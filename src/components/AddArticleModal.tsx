@@ -1,14 +1,21 @@
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PlusCircle } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { saveArticle } from "@/lib/article";
 
 interface AddArticleModalProps {
-  onAddArticle: (article: { 
-    url: string; 
+  onAddArticle: (article: {
+    url: string;
     category?: string;
     title?: string;
     description?: string;
@@ -37,23 +44,8 @@ export function AddArticleModal({ onAddArticle }: AddArticleModalProps) {
 
     setIsLoading(true);
     try {
-      const response = await fetch(`https://api.microlink.io?url=${encodeURIComponent(url)}`);
-      const data = await response.json();
-      
-      if (data.status === 'success') {
-        onAddArticle({
-          url,
-          category,
-          title: data.data.title,
-          description: data.data.description,
-          image: data.data.image?.url,
-          favicon: data.data.logo?.url,
-          publishedDate: data.data.date,
-        });
-      } else {
-        onAddArticle({ url, category });
-      }
-      
+      const article = await saveArticle(url, { category });
+      onAddArticle(article);
       setIsLoading(false);
       setUrl("");
       setCategory("");
@@ -63,15 +55,12 @@ export function AddArticleModal({ onAddArticle }: AddArticleModalProps) {
         description: "Your article has been added to your reading list",
       });
     } catch (error) {
-      console.error('Error fetching metadata:', error);
-      onAddArticle({ url, category });
       setIsLoading(false);
-      setUrl("");
-      setCategory("");
-      setOpen(false);
       toast({
-        title: "Article saved",
-        description: "Article saved without preview data",
+        title: "Error saving article",
+        description:
+          error instanceof Error ? error.message : "Failed to save article",
+        variant: "destructive",
       });
     }
   };
@@ -89,7 +78,9 @@ export function AddArticleModal({ onAddArticle }: AddArticleModalProps) {
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px] animate-fade-in">
         <DialogHeader>
-          <DialogTitle className="text-xl font-semibold">Save Article</DialogTitle>
+          <DialogTitle className="text-xl font-semibold">
+            Save Article
+          </DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-6 mt-4">
           <div className="space-y-2">
