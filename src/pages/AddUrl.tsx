@@ -16,13 +16,29 @@ const AddUrl = () => {
       // Get everything after /add/
       const urlPath = location.pathname.replace("/add/", "");
       if (!urlPath) {
-        navigate("/");
+        navigate("/", { replace: true });
         return;
       }
 
       setStatus("Decoding URL...");
 
       const validUrl = decodeURIComponent(urlPath);
+
+      // Check if article already exists
+      const savedArticles = localStorage.getItem("articles");
+      const articles = savedArticles ? JSON.parse(savedArticles) : [];
+      const articleExists = articles.some(
+        (article: Article) => article.url === validUrl && !article.deleted
+      );
+
+      if (articleExists) {
+        toast({
+          title: "Article already exists",
+          description: "This article is already in your reading list",
+        });
+        navigate("/", { replace: true });
+        return;
+      }
 
       try {
         setStatus("Fetching article metadata...");
@@ -88,7 +104,7 @@ const AddUrl = () => {
       }
 
       setStatus("Redirecting to home...");
-      navigate("/");
+      navigate("/", { replace: true });
     };
 
     saveArticle();
