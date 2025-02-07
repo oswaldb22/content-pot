@@ -30,7 +30,7 @@ jobs:
         run: pnpm lint
 
       - name: Test
-        run: pnpm test
+        run: pnpm test --if-present
 
       - name: Build
         run: pnpm build
