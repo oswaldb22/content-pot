@@ -19,7 +19,10 @@ import {
   Trash2,
   ArchiveRestore,
   RefreshCcw,
+  Eye,
+  EyeOff,
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export interface Article {
   id: string;
@@ -164,42 +167,23 @@ export function ArticleList({
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <button
+                    <Button
+                      variant="ghost"
+                      size="icon"
                       onClick={(e) => {
                         e.preventDefault();
                         toggleReadStatus(article.id);
                       }}
-                      className={`p-2 rounded-full hover:bg-accent/10 transition-colors ${
-                        article.read
-                          ? "text-accent"
-                          : "text-muted-foreground/50"
-                      }`}
+                      className={
+                        article.read ? "text-primary" : "text-muted-foreground"
+                      }
                     >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="16"
-                        height="16"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        {article.read ? (
-                          <>
-                            <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
-                            <circle cx="12" cy="12" r="3" />
-                          </>
-                        ) : (
-                          <>
-                            <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
-                            <circle cx="12" cy="12" r="3" />
-                            <path d="m3 3 18 18" />
-                          </>
-                        )}
-                      </svg>
-                    </button>
+                      {article.read ? (
+                        <Eye className="h-4 w-4" />
+                      ) : (
+                        <EyeOff className="h-4 w-4" />
+                      )}
+                    </Button>
                   </TooltipTrigger>
                   <TooltipContent>
                     <p>{article.read ? "Mark as unread" : "Mark as read"}</p>
