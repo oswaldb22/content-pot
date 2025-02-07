@@ -13,7 +13,13 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { MoreVertical, Archive, Trash2, ArchiveRestore, RefreshCcw } from "lucide-react";
+import {
+  MoreVertical,
+  Archive,
+  Trash2,
+  ArchiveRestore,
+  RefreshCcw,
+} from "lucide-react";
 
 export interface Article {
   id: string;
@@ -52,40 +58,37 @@ export function ArticleList({
   useEffect(() => {
     const fetchMetadata = async () => {
       const updatedArticles = await Promise.all(
-        articles
-          .map(async (article) => {
-            try {
-              if (
-                article.title !== null &&
-                article.description !== null &&
-                article.image !== null &&
-                article.favicon !== null
-              ) {
-                return article;
-              }
-
-              const response = await fetch(
-                `https://api.microlink.io?url=${encodeURIComponent(
-                  article.url
-                )}`
-              );
-              const data = await response.json();
-
-              if (data.status === "success") {
-                return {
-                  ...article,
-                  title: data.data.title || article.title || article.url,
-                  description: data.data.description || "",
-                  image: data.data.image?.url || "",
-                  favicon: data.data.logo?.url || "",
-                  publishedDate: data.data.date || article.publishedDate,
-                };
-              }
-            } catch (error) {
-              console.error("Error fetching metadata:", error);
+        articles.map(async (article) => {
+          try {
+            if (
+              article.title !== null &&
+              article.description !== null &&
+              article.image !== null &&
+              article.favicon !== null
+            ) {
+              return article;
             }
-            return article;
-          })
+
+            const response = await fetch(
+              `https://api.microlink.io?url=${encodeURIComponent(article.url)}`
+            );
+            const data = await response.json();
+
+            if (data.status === "success") {
+              return {
+                ...article,
+                title: data.data.title || article.title || article.url,
+                description: data.data.description || "",
+                image: data.data.image?.url || "",
+                favicon: data.data.logo?.url || "",
+                publishedDate: data.data.date || article.publishedDate,
+              };
+            }
+          } catch (error) {
+            console.error("Error fetching metadata:", error);
+          }
+          return article;
+        })
       );
       setEnrichedArticles(updatedArticles);
     };
