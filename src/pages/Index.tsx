@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { AddArticleModal } from "@/components/AddArticleModal";
 import { ArticleList } from "@/components/ArticleList";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { ShareButton } from "@/components/ShareButton";
+
 import {
   List,
   LayoutGrid,
@@ -24,20 +26,43 @@ import {
   saveArticle,
   refreshArticleMetadata,
 } from "@/lib/article";
+import { decodeArticlesFromUrl } from "@/lib/encode";
 
 const Index = () => {
   const [articles, setArticles] = useState<Article[]>([]);
   const { preferences, updatePreference } = usePreferences();
 
   useEffect(() => {
+    // Load articles from localStorage
     const savedArticles = localStorage.getItem("articles");
-    if (savedArticles) {
-      setArticles(
-        JSON.parse(savedArticles).map((article) => ({
+    const localArticles = savedArticles
+      ? JSON.parse(savedArticles).map((article) => ({
           ...article,
           status: "active",
         }))
-      );
+      : [];
+
+    // Check for shared articles in URL
+    const hash = window.location.hash;
+    if (hash.startsWith("#data=")) {
+      const encodedData = hash.slice(6); // Remove '#data='
+      const sharedArticles = decodeArticlesFromUrl(encodedData);
+
+      // Merge shared articles with local articles, avoiding duplicates
+      const mergedArticles = [...localArticles];
+      sharedArticles.forEach((sharedArticle) => {
+        if (
+          !mergedArticles.some((article) => article.id === sharedArticle.id)
+        ) {
+          mergedArticles.push(sharedArticle);
+        }
+      });
+
+      setArticles(mergedArticles);
+      // Clear the hash after processing
+      window.history.replaceState(null, "", window.location.pathname);
+    } else {
+      setArticles(localArticles);
     }
   }, []);
 
@@ -158,6 +183,7 @@ const Index = () => {
           </div>
           <div className="flex items-center gap-4">
             <AddArticleModal onAddArticle={handleAddArticle} />
+            <ShareButton articles={filteredArticles} />
             <ThemeToggle />
           </div>
         </div>
