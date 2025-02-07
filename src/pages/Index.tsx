@@ -27,6 +27,7 @@ import {
   refreshArticleMetadata,
 } from "@/lib/article";
 import { decodeArticlesFromUrl } from "@/lib/encode";
+import confetti from "canvas-confetti";
 
 const Index = () => {
   const [articles, setArticles] = useState<Article[]>([]);
@@ -152,10 +153,49 @@ const Index = () => {
     );
   };
 
+  const rewardAnimation = ({ seconds = 3 }: { seconds?: number }) => {
+    const end = Date.now() + seconds * 1000; // 3 seconds
+    const colors = ["#a786ff", "#fd8bbc", "#eca184", "#f8deb1"];
+
+    const frame = () => {
+      if (Date.now() > end) return;
+
+      confetti({
+        particleCount: 2,
+        angle: 60,
+        spread: 55,
+        startVelocity: 60,
+        origin: { x: 0, y: 0.5 },
+        colors: colors,
+      });
+      confetti({
+        particleCount: 2,
+        angle: 120,
+        spread: 55,
+        startVelocity: 60,
+        origin: { x: 1, y: 0.5 },
+        colors: colors,
+      });
+
+      requestAnimationFrame(frame);
+    };
+
+    frame();
+  };
+
   const toggleReadStatus = (articleId: string) => {
     const updatedArticles = articles.map((article) =>
       article.id === articleId ? { ...article, read: !article.read } : article
     );
+
+    if (
+      updatedArticles.some(
+        (article) => article.id === articleId && article.read
+      )
+    ) {
+      rewardAnimation({});
+    }
+
     setArticles(updatedArticles);
   };
 
