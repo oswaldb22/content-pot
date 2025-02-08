@@ -14,6 +14,7 @@ import {
   Archive,
   CheckCircle2,
   CookingPot,
+  Tag,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -76,6 +77,13 @@ const Index = () => {
     return [...new Set(domains)].sort();
   };
 
+  const getUniqueCategories = (): string[] => {
+    const categories = articles
+      .map((article) => article.category)
+      .filter((category): category is string => !!category);
+    return [...new Set(categories)].sort();
+  };
+
   const handleAddArticle = async (articleData: Partial<Article>) => {
     if (!articleData.url) return;
 
@@ -120,6 +128,16 @@ const Index = () => {
     const readStatus = article.read ? "read" : "unread";
     const hasReadFilter = preferences?.filters?.read?.length > 0;
     if (hasReadFilter && !preferences?.filters?.read?.includes(readStatus)) {
+      return false;
+    }
+
+    // Category filter
+    const hasCategoryFilter = preferences?.filters?.categories?.length > 0;
+    if (
+      hasCategoryFilter &&
+      (!article.category ||
+        !preferences?.filters?.categories?.includes(article.category))
+    ) {
       return false;
     }
 
@@ -301,6 +319,22 @@ const Index = () => {
                 read: values.length
                   ? (values as ("unread" | "read")[])
                   : ["unread", "read"], // Default to both if nothing selected
+              });
+            }}
+          />
+
+          <MultiSelectFilter
+            title="Categories"
+            options={getUniqueCategories().map((category) => ({
+              label: category,
+              value: category,
+              icon: Tag,
+            }))}
+            selectedValues={preferences?.filters?.categories || []}
+            onChange={(categories) => {
+              updatePreference("filters", {
+                ...preferences.filters,
+                categories,
               });
             }}
           />
