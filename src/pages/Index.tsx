@@ -272,74 +272,76 @@ const Index = () => {
           </p>
         </div>
 
-        <div className="flex flex-wrap gap-3 mb-8 pb-6 border-b">
-          <MultiSelectFilter
-            title="Domains"
-            options={getUniqueDomains().map((domain) => ({
-              label: domain,
-              value: domain,
-              icon: Globe,
-            }))}
-            selectedValues={preferences.filters.domains}
-            onChange={(domains) => {
-              updatePreference("filters", {
-                ...preferences.filters,
-                domains,
-              });
-            }}
-          />
+        <div className="flex justify-between items-start gap-4 mb-8 pb-6 border-b">
+          <div className="flex-1 flex flex-wrap gap-3">
+            <MultiSelectFilter
+              title="Domains"
+              options={getUniqueDomains().map((domain) => ({
+                label: domain,
+                value: domain,
+                icon: Globe,
+              }))}
+              selectedValues={preferences.filters.domains}
+              onChange={(domains) => {
+                updatePreference("filters", {
+                  ...preferences.filters,
+                  domains,
+                });
+              }}
+            />
 
-          <MultiSelectFilter
-            title="Status"
-            options={[
-              { label: "Active", value: "active", icon: Clock },
-              { label: "Archived", value: "archived", icon: Archive },
-            ]}
-            selectedValues={preferences?.filters?.status || []}
-            onChange={(values) => {
-              updatePreference("filters", {
-                ...preferences.filters,
-                status: values.length
-                  ? (values as ("active" | "archived")[])
-                  : ["active"], // Default to active if nothing selected
-              });
-            }}
-          />
+            <MultiSelectFilter
+              title="Status"
+              options={[
+                { label: "Active", value: "active", icon: Clock },
+                { label: "Archived", value: "archived", icon: Archive },
+              ]}
+              selectedValues={preferences?.filters?.status || []}
+              onChange={(values) => {
+                updatePreference("filters", {
+                  ...preferences.filters,
+                  status: values.length
+                    ? (values as ("active" | "archived")[])
+                    : ["active"], // Default to active if nothing selected
+                });
+              }}
+            />
 
-          <MultiSelectFilter
-            title="Read Status"
-            options={[
-              { label: "Read", value: "read", icon: CheckCircle2 },
-              { label: "Unread", value: "unread", icon: Clock },
-            ]}
-            selectedValues={preferences?.filters?.read || []}
-            onChange={(values) => {
-              updatePreference("filters", {
-                ...preferences.filters,
-                read: values.length
-                  ? (values as ("unread" | "read")[])
-                  : ["unread", "read"], // Default to both if nothing selected
-              });
-            }}
-          />
+            <MultiSelectFilter
+              title="Read Status"
+              options={[
+                { label: "Read", value: "read", icon: CheckCircle2 },
+                { label: "Unread", value: "unread", icon: Clock },
+              ]}
+              selectedValues={preferences?.filters?.read || []}
+              onChange={(values) => {
+                updatePreference("filters", {
+                  ...preferences.filters,
+                  read: values.length
+                    ? (values as ("unread" | "read")[])
+                    : ["unread", "read"], // Default to both if nothing selected
+                });
+              }}
+            />
 
-          <MultiSelectFilter
-            title="Categories"
-            options={getUniqueCategories().map((category) => ({
-              label: category,
-              value: category,
-              icon: Tag,
-            }))}
-            selectedValues={preferences?.filters?.categories || []}
-            onChange={(categories) => {
-              updatePreference("filters", {
-                ...preferences.filters,
-                categories,
-              });
-            }}
-          />
+            <MultiSelectFilter
+              title="Categories"
+              options={getUniqueCategories().map((category) => ({
+                label: category,
+                value: category,
+                icon: Tag,
+              }))}
+              selectedValues={preferences?.filters?.categories || []}
+              onChange={(categories) => {
+                updatePreference("filters", {
+                  ...preferences.filters,
+                  categories,
+                });
+              }}
+            />
+          </div>
 
-          <div className="flex items-center bg-muted/50 rounded-lg p-1 gap-1 h-9">
+          <div className="flex items-center bg-muted/50 rounded-lg p-1 gap-1 h-9 shrink-0">
             <Button
               variant="ghost"
               size="icon"
