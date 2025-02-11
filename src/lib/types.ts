@@ -11,4 +11,5 @@ export interface Article {
   read: boolean;
   status: "active" | "archived";
   deleted: boolean;
+  favorite: boolean;
 }
