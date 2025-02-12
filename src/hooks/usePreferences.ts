@@ -8,6 +8,7 @@ export interface Preferences {
     status: ("active" | "archived")[];
     read: ("read" | "unread")[];
     categories: string[];
+    favorite: boolean;
   };
 }
 
@@ -19,6 +20,7 @@ const DEFAULT_PREFERENCES: Preferences = {
     status: ["active"],
     read: ["read", "unread"],
     categories: [],
+    favorite: false,
   },
 };
 
