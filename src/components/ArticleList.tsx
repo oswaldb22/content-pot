@@ -21,6 +21,8 @@ import {
   RefreshCcw,
   Eye,
   EyeOff,
+  Star,
+  StarOff,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -37,12 +39,14 @@ export interface Article {
   read: boolean;
   status: "active" | "archived";
   deleted: boolean;
+  favorite: boolean;
 }
 
 export interface ArticleListProps {
   articles: Article[];
   displayStyle: "full" | "minimal";
   toggleReadStatus: (articleId: string) => void;
+  toggleFavoriteStatus: (articleId: string) => void;
   onArchive: (articleId: string) => void;
   onDelete: (articleId: string) => void;
   onRefreshMetadata?: (articleId: string) => void;
@@ -52,6 +56,7 @@ export function ArticleList({
   articles,
   displayStyle,
   toggleReadStatus,
+  toggleFavoriteStatus,
   onArchive,
   onDelete,
   onRefreshMetadata,
@@ -164,6 +169,38 @@ export function ArticleList({
             </a>
 
             <div className="flex items-center gap-1 flex-shrink-0 ml-4">
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        toggleFavoriteStatus(article.id);
+                      }}
+                      className={
+                        article.favorite
+                          ? "text-yellow-500"
+                          : "text-muted-foreground"
+                      }
+                    >
+                      {article.favorite ? (
+                        <Star className="h-4 w-4 fill-current" />
+                      ) : (
+                        <StarOff className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>
+                      {article.favorite
+                        ? "Remove from favorites"
+                        : "Add to favorites"}
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
