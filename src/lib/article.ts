@@ -68,6 +68,7 @@ export const saveArticle = async (
     read: false,
     status: "active",
     deleted: false,
+    favorite: false,
   };
 
   // Save to localStorage
