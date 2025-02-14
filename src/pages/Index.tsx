@@ -93,19 +93,29 @@ const Index = () => {
     [filteredArticles, preferences.sortOrder]
   );
 
-  const handleAddArticle = useCallback(
-    async (articleData: Partial<Article>) => {
-      if (!articleData.url) return;
+  const handleAddArticle = (article: Article) => {
+    setArticles((prev) => {
+      // Avoid duplicate articles
+      const exists = prev.some((a) => a.url === article.url);
+      if (exists) return prev;
 
+      const newArticles = [...prev, article];
+      let newDomain = "";
       try {
-        const newArticle = await saveArticle(articleData.url, articleData);
-        setArticles((prev) => [...prev, newArticle]);
+        newDomain = new URL(article.url).hostname;
       } catch (error) {
-        console.error("Error adding article:", error);
+        newDomain = article.url;
       }
-    },
-    [setArticles]
-  );
+      if (!preferences.filters.domains.includes(newDomain)) {
+        updatePreference("filters", {
+          ...preferences.filters,
+          domains: [...preferences.filters.domains, newDomain],
+        });
+      }
+
+      return newArticles;
+    });
+  };
 
   const handleArchiveArticle = useCallback(
     (articleId: string) => {
@@ -296,7 +306,7 @@ const Index = () => {
               }}
             /> */}
 
-            <MultiSelectFilter
+            {/* <MultiSelectFilter
               title="Categories"
               options={uniqueCategories.map((category) => ({
                 label: category,
@@ -310,7 +320,7 @@ const Index = () => {
                   categories,
                 });
               }}
-            />
+            /> */}
           </div>
 
           <div className="flex items-center bg-muted/50 rounded-lg p-1 gap-1 h-9 shrink-0">

@@ -31,7 +31,8 @@ export const filterArticles = (
     // Category filter
     // if (
     //   filters.categories.length > 0 &&
-    //   (!article.category || !filters.categories.includes(article.category))
+    //   (!article.categories ||
+    //     !article.categories.some((cat) => filters.categories.includes(cat)))
     // ) {
     //   return false;
     // }
@@ -62,8 +63,6 @@ export const getUniqueDomains = (articles: Article[]): string[] => {
 };
 
 export const getUniqueCategories = (articles: Article[]): string[] => {
-  const categories = articles
-    .map((article) => article.category)
-    .filter((category): category is string => !!category);
+  const categories = articles.flatMap((article) => article.categories || []);
   return [...new Set(categories)].sort();
 };

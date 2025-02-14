@@ -12,7 +12,7 @@ export const extractDomain = (url: string): string => {
 export const saveArticle = async (
   url: string,
   options?: {
-    category?: string;
+    categories?: string[];
     title?: string;
     description?: string;
     image?: string;
@@ -43,7 +43,7 @@ export const saveArticle = async (
 
       if (data.status === "success") {
         metadata = {
-          ...options, // Preserve existing options including category
+          ...options, // Preserve existing options including categories
           title: data.data.title,
           description: data.data.description,
           image: data.data.image?.url,
@@ -59,7 +59,7 @@ export const saveArticle = async (
   const newArticle: Article = {
     id: crypto.randomUUID(),
     url,
-    category: metadata?.category,
+    categories: metadata?.categories || [],
     title: metadata?.title,
     description: metadata?.description,
     image: metadata?.image,

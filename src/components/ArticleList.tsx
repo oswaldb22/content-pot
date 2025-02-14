@@ -136,10 +136,17 @@ export function ArticleList({
                   {article.title || article.url}
                 </h3>
                 <div className="flex items-center gap-2 mt-1">
-                  {article.category && (
-                    <span className="inline-flex items-center px-2 py-0.5 text-xs font-medium bg-secondary text-secondary-foreground rounded">
-                      {article.category}
-                    </span>
+                  {article.categories && article.categories.length > 0 && (
+                    <div className="flex gap-1 flex-wrap">
+                      {article.categories.map((cat) => (
+                        <span
+                          key={cat}
+                          className="inline-flex items-center px-2 py-0.5 text-xs font-medium bg-secondary text-secondary-foreground rounded"
+                        >
+                          {cat}
+                        </span>
+                      ))}
+                    </div>
                   )}
                   <span className="text-xs text-muted-foreground">
                     {formatDistanceToNow(new Date(article.dateAdded))} ago

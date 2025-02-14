@@ -25,7 +25,7 @@ import { CategoryDialog } from "./CategoryDialog";
 interface AddArticleModalProps {
   onAddArticle: (article: {
     url: string;
-    category?: string;
+    categories: string[];
     title?: string;
     description?: string;
     image?: string;
@@ -36,7 +36,7 @@ interface AddArticleModalProps {
 
 export function AddArticleModal({ onAddArticle }: AddArticleModalProps) {
   const [url, setUrl] = useState("");
-  const [category, setCategory] = useState("");
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
   const [open, setOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -58,7 +58,7 @@ export function AddArticleModal({ onAddArticle }: AddArticleModalProps) {
 
   const handleCategoryCreated = (categoryName: string) => {
     loadCategories();
-    setCategory(categoryName);
+    setSelectedCategories([categoryName]);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -73,11 +73,14 @@ export function AddArticleModal({ onAddArticle }: AddArticleModalProps) {
 
     setIsLoading(true);
     try {
-      const article = await saveArticle(url, { category });
+      const article = await saveArticle(url, {
+        categories: selectedCategories,
+      });
+      // Call onAddArticle before any state updates to ensure immediate propagation
       onAddArticle(article);
       setIsLoading(false);
       setUrl("");
-      setCategory("");
+      setSelectedCategories([]);
       setOpen(false);
       toast({
         title: "Article saved successfully",
@@ -138,18 +141,50 @@ export function AddArticleModal({ onAddArticle }: AddArticleModalProps) {
                   New Category
                 </Button>
               </div>
-              <Select value={category} onValueChange={setCategory}>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select a category" />
-                </SelectTrigger>
-                <SelectContent>
-                  {categories.map((cat) => (
-                    <SelectItem key={cat} value={cat}>
+              <div className="space-y-2">
+                <div className="flex flex-wrap gap-2">
+                  {selectedCategories.map((cat) => (
+                    <span
+                      key={cat}
+                      className="inline-flex items-center px-2 py-1 rounded-md bg-secondary text-secondary-foreground text-sm"
+                    >
                       {cat}
-                    </SelectItem>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setSelectedCategories(
+                            selectedCategories.filter((c) => c !== cat)
+                          )
+                        }
+                        className="ml-2 hover:text-primary"
+                      >
+                        ×
+                      </button>
+                    </span>
                   ))}
-                </SelectContent>
-              </Select>
+                </div>
+                <Select
+                  value=""
+                  onValueChange={(value) => {
+                    if (!selectedCategories.includes(value)) {
+                      setSelectedCategories([...selectedCategories, value]);
+                    }
+                  }}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Add categories" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories
+                      .filter((cat) => !selectedCategories.includes(cat))
+                      .map((cat) => (
+                        <SelectItem key={cat} value={cat}>
+                          {cat}
+                        </SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
             <Button type="submit" className="w-full" disabled={isLoading}>
               {isLoading ? "Saving..." : "Save Article"}
