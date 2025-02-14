@@ -43,6 +43,7 @@ export const saveArticle = async (
 
       if (data.status === "success") {
         metadata = {
+          ...options, // Preserve existing options including category
           title: data.data.title,
           description: data.data.description,
           image: data.data.image?.url,
