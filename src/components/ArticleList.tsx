@@ -25,22 +25,7 @@ import {
   StarOff,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-
-export interface Article {
-  id: string;
-  url: string;
-  category?: string;
-  title?: string;
-  description?: string;
-  image?: string;
-  favicon?: string;
-  dateAdded: string;
-  publishedDate?: string;
-  read: boolean;
-  status: "active" | "archived";
-  deleted: boolean;
-  favorite: boolean;
-}
+import { Article } from "@/lib/types";
 
 export interface ArticleListProps {
   articles: Article[];
