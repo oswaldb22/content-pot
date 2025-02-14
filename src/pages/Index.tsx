@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { AddArticleModal } from "@/components/AddArticleModal";
 import { ArticleList } from "@/components/ArticleList";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -15,20 +15,24 @@ import {
   CheckCircle2,
   CookingPot,
   Tag,
+  Star,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { usePreferences } from "@/hooks/usePreferences";
 import { MultiSelectFilter } from "@/components/MultiSelectFilter";
 
 import { Article } from "@/lib/types";
-import {
-  extractDomain,
-  saveArticle,
-  refreshArticleMetadata,
-} from "@/lib/article";
+import { saveArticle, refreshArticleMetadata } from "@/lib/article";
 import { decodeArticlesFromUrl } from "@/lib/encode";
-import confetti from "canvas-confetti";
+import {
+  filterArticles,
+  sortArticles,
+  getUniqueDomains,
+  getUniqueCategories,
+} from "@/lib/articleUtils";
+import { useRewardAnimation } from "@/hooks/useRewardAnimation";
 
 const Index = () => {
   const [articles, setArticles] = useState<Article[]>([]);
@@ -72,164 +76,120 @@ const Index = () => {
     localStorage.setItem("articles", JSON.stringify(articles));
   }, [articles]);
 
-  const getUniqueDomains = (): string[] => {
-    const domains = articles.map((article) => extractDomain(article.url));
-    return [...new Set(domains)].sort();
-  };
+  const { trigger: triggerRewardAnimation } = useRewardAnimation();
 
-  const getUniqueCategories = (): string[] => {
-    const categories = articles
-      .map((article) => article.category)
-      .filter((category): category is string => !!category);
-    return [...new Set(categories)].sort();
-  };
+  // Memoized computations
+  const uniqueDomains = useMemo(() => getUniqueDomains(articles), [articles]);
+  const uniqueCategories = useMemo(
+    () => getUniqueCategories(articles),
+    [articles]
+  );
+  const filteredArticles = useMemo(
+    () => filterArticles(articles, preferences.filters),
+    [articles, preferences.filters]
+  );
+  const sortedArticles = useMemo(
+    () => sortArticles(filteredArticles, preferences.sortOrder),
+    [filteredArticles, preferences.sortOrder]
+  );
 
-  const handleAddArticle = async (articleData: Partial<Article>) => {
-    if (!articleData.url) return;
+  const handleAddArticle = useCallback(
+    async (articleData: Partial<Article>) => {
+      if (!articleData.url) return;
 
-    try {
-      const newArticle = await saveArticle(articleData.url, articleData);
-      const domain = extractDomain(articleData.url);
+      try {
+        const newArticle = await saveArticle(articleData.url, articleData);
+        setArticles((prev) => [...prev, newArticle]);
+      } catch (error) {
+        console.error("Error adding article:", error);
+      }
+    },
+    [setArticles]
+  );
 
-      if (domain && !preferences.filters.domains.includes(domain)) {
-        updatePreference("filters", {
-          ...preferences.filters,
-          domains: [...preferences.filters.domains, domain],
-        });
+  const handleArchiveArticle = useCallback(
+    (articleId: string) => {
+      setArticles((prev) =>
+        prev.map((article) =>
+          article.id === articleId
+            ? {
+                ...article,
+                status: article.status === "archived" ? "active" : "archived",
+              }
+            : article
+        )
+      );
+    },
+    [setArticles]
+  );
+
+  const handleDeleteArticle = useCallback(
+    (articleId: string) => {
+      setArticles((prev) =>
+        prev.map((article) =>
+          article.id === articleId ? { ...article, deleted: true } : article
+        )
+      );
+    },
+    [setArticles]
+  );
+
+  const toggleReadStatus = useCallback(
+    (articleId: string) => {
+      const updatedArticles = articles.map((article) =>
+        article.id === articleId ? { ...article, read: !article.read } : article
+      );
+
+      if (
+        updatedArticles.some(
+          (article) => article.id === articleId && article.read
+        )
+      ) {
+        triggerRewardAnimation();
       }
 
-      setArticles((prev) => [...prev, newArticle]);
-    } catch (error) {
-      console.error("Error adding article:", error);
-    }
-  };
+      setArticles(updatedArticles);
+    },
+    [articles, setArticles, triggerRewardAnimation]
+  );
 
-  const filteredArticles = articles.filter((article) => {
-    // Skip deleted articles
-    if (article.deleted) return false;
-
-    // Status filter (active/archived)
-    const hasStatusFilter = preferences?.filters?.status?.length > 0;
-    if (
-      hasStatusFilter &&
-      !preferences?.filters?.status?.includes(article.status)
-    ) {
-      return false;
-    }
-
-    // Domain filter
-    const domain = extractDomain(article.url);
-    const hasDomainFilter = preferences?.filters?.domains?.length > 0;
-    if (hasDomainFilter && !preferences?.filters?.domains?.includes(domain)) {
-      return false;
-    }
-
-    // Read/Unread filter
-    const readStatus = article.read ? "read" : "unread";
-    const hasReadFilter = preferences?.filters?.read?.length > 0;
-    if (hasReadFilter && !preferences?.filters?.read?.includes(readStatus)) {
-      return false;
-    }
-
-    // Category filter
-    const hasCategoryFilter = preferences?.filters?.categories?.length > 0;
-    if (
-      hasCategoryFilter &&
-      (!article.category ||
-        !preferences?.filters?.categories?.includes(article.category))
-    ) {
-      return false;
-    }
-
-    return true;
-  });
-
-  const sortedArticles = [...filteredArticles].sort((a, b) => {
-    const dateA = new Date(a.dateAdded).getTime();
-    const dateB = new Date(b.dateAdded).getTime();
-    return preferences.sortOrder === "newest" ? dateB - dateA : dateA - dateB;
-  });
-
-  const handleArchiveArticle = (articleId: string) => {
-    setArticles((prev) =>
-      prev.map((article) =>
+  const toggleFavoriteStatus = useCallback(
+    (articleId: string) => {
+      const updatedArticles = articles.map((article) =>
         article.id === articleId
-          ? {
-              ...article,
-              status: article.status === "archived" ? "active" : "archived",
-            }
+          ? { ...article, favorite: !article.favorite }
           : article
-      )
-    );
-  };
-
-  const handleDeleteArticle = (articleId: string) => {
-    setArticles((prev) =>
-      prev.map((article) =>
-        article.id === articleId ? { ...article, deleted: true } : article
-      )
-    );
-  };
-
-  const rewardAnimation = ({ seconds = 3 }: { seconds?: number }) => {
-    const end = Date.now() + seconds * 1000; // 3 seconds
-    const colors = ["#a786ff", "#fd8bbc", "#eca184", "#f8deb1"];
-
-    const frame = () => {
-      if (Date.now() > end) return;
-
-      confetti({
-        particleCount: 2,
-        angle: 60,
-        spread: 55,
-        startVelocity: 60,
-        origin: { x: 0, y: 0.5 },
-        colors: colors,
-      });
-      confetti({
-        particleCount: 2,
-        angle: 120,
-        spread: 55,
-        startVelocity: 60,
-        origin: { x: 1, y: 0.5 },
-        colors: colors,
-      });
-
-      requestAnimationFrame(frame);
-    };
-
-    frame();
-  };
-
-  const toggleReadStatus = (articleId: string) => {
-    const updatedArticles = articles.map((article) =>
-      article.id === articleId ? { ...article, read: !article.read } : article
-    );
-
-    if (
-      updatedArticles.some(
-        (article) => article.id === articleId && article.read
-      )
-    ) {
-      rewardAnimation({});
-    }
-
-    setArticles(updatedArticles);
-  };
-
-  const handleRefreshMetadata = async (articleId: string) => {
-    const article = articles.find((a) => a.id === articleId);
-    if (!article) return;
-
-    try {
-      const updatedArticle = await refreshArticleMetadata(article);
-      setArticles((prev) =>
-        prev.map((a) => (a.id === articleId ? updatedArticle : a))
       );
-    } catch (error) {
-      console.error("Error refreshing metadata:", error);
-    }
-  };
+
+      if (
+        updatedArticles.some(
+          (article) => article.id === articleId && article.favorite
+        )
+      ) {
+        triggerRewardAnimation();
+      }
+
+      setArticles(updatedArticles);
+    },
+    [articles, setArticles, triggerRewardAnimation]
+  );
+
+  const handleRefreshMetadata = useCallback(
+    async (articleId: string) => {
+      const article = articles.find((a) => a.id === articleId);
+      if (!article) return;
+
+      try {
+        const updatedArticle = await refreshArticleMetadata(article);
+        setArticles((prev) =>
+          prev.map((a) => (a.id === articleId ? updatedArticle : a))
+        );
+      } catch (error) {
+        console.error("Error refreshing metadata:", error);
+      }
+    },
+    [articles, setArticles]
+  );
 
   return (
     <div className="min-h-screen bg-background transition-colors duration-300">
@@ -276,7 +236,7 @@ const Index = () => {
           <div className="flex-1 flex flex-wrap gap-3">
             <MultiSelectFilter
               title="Domains"
-              options={getUniqueDomains().map((domain) => ({
+              options={uniqueDomains.map((domain) => ({
                 label: domain,
                 value: domain,
                 icon: Globe,
@@ -296,7 +256,7 @@ const Index = () => {
                 { label: "Active", value: "active", icon: Clock },
                 { label: "Archived", value: "archived", icon: Archive },
               ]}
-              selectedValues={preferences?.filters?.status || []}
+              selectedValues={preferences.filters.status}
               onChange={(values) => {
                 updatePreference("filters", {
                   ...preferences.filters,
@@ -313,7 +273,7 @@ const Index = () => {
                 { label: "Read", value: "read", icon: CheckCircle2 },
                 { label: "Unread", value: "unread", icon: Clock },
               ]}
-              selectedValues={preferences?.filters?.read || []}
+              selectedValues={preferences.filters.read}
               onChange={(values) => {
                 updatePreference("filters", {
                   ...preferences.filters,
@@ -324,14 +284,26 @@ const Index = () => {
               }}
             />
 
+            {/* <MultiSelectFilter
+              title="Favorites"
+              options={[{ label: "Favorites", value: "favorite", icon: Star }]}
+              selectedValues={preferences.filters.favorite ? ["favorite"] : []}
+              onChange={(values) => {
+                updatePreference("filters", {
+                  ...preferences.filters,
+                  favorite: values.includes("favorite"),
+                });
+              }}
+            /> */}
+
             <MultiSelectFilter
               title="Categories"
-              options={getUniqueCategories().map((category) => ({
+              options={uniqueCategories.map((category) => ({
                 label: category,
                 value: category,
                 icon: Tag,
               }))}
-              selectedValues={preferences?.filters?.categories || []}
+              selectedValues={preferences.filters.categories}
               onChange={(categories) => {
                 updatePreference("filters", {
                   ...preferences.filters,
@@ -389,19 +361,16 @@ const Index = () => {
           </div>
         </div>
 
-        {/* <ScrollArea className="h-[calc(100vh-16rem)] w-full rounded-md">
-        <div className="pr-4"> */}
         <ArticleList
           articles={sortedArticles}
           displayStyle={preferences.displayStyle}
           toggleReadStatus={toggleReadStatus}
+          toggleFavoriteStatus={toggleFavoriteStatus}
           onArchive={handleArchiveArticle}
           onDelete={handleDeleteArticle}
           onRefreshMetadata={handleRefreshMetadata}
         />
       </div>
-      {/* </ScrollArea>
-      </div> */}
     </div>
   );
 };
