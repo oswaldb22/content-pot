@@ -42,9 +42,10 @@ const Index = () => {
     // Load articles from localStorage
     const savedArticles = localStorage.getItem("articles");
     const localArticles = savedArticles
-      ? JSON.parse(savedArticles).map((article) => ({
+      ? JSON.parse(savedArticles).map((article: Article) => ({
           ...article,
           status: "active",
+          categories: article.categories || [],
         }))
       : [];
 
