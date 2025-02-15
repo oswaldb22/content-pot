@@ -1,13 +1,15 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { extractDomain, saveArticle } from "@/lib/article";
+import { usePreferences } from "@/hooks/usePreferences";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
-import { saveArticle } from "@/lib/article";
 
 const AddUrl = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const location = window.location;
+  const { preferences, updatePreference } = usePreferences();
 
   const [status, setStatus] = useState("Initializing...");
 
@@ -27,6 +29,13 @@ const AddUrl = () => {
       try {
         setStatus("Saving article...");
         await saveArticle(validUrl);
+        const domain = extractDomain(validUrl);
+        if (!preferences.filters.domains.includes(domain)) {
+          updatePreference("filters", {
+            ...preferences.filters,
+            domains: [...preferences.filters.domains, domain],
+          });
+        }
         toast({
           title: "Article saved successfully",
           description: "Your article has been added to your reading list",
@@ -54,7 +63,13 @@ const AddUrl = () => {
     };
 
     handleSaveArticle();
-  }, [location.pathname, navigate, toast]);
+  }, [
+    location.pathname,
+    navigate,
+    toast,
+    preferences.filters,
+    updatePreference,
+  ]);
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center">
