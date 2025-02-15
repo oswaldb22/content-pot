@@ -24,3 +24,5 @@ dist-ssr
 *.sw?
 
 features.md
+# Million Lint
+.million
