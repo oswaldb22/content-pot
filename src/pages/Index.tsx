@@ -17,6 +17,7 @@ import {
   CookingPot,
   Tag,
   Star,
+  Pencil,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -39,6 +40,7 @@ const Index = () => {
   const [articles, setArticles] = useState<Article[]>([]);
   const [importModalOpen, setImportModalOpen] = useState(false);
   const [sharedArticles, setSharedArticles] = useState<Article[]>([]);
+  const [isEditMode, setIsEditMode] = useState(false);
   const { preferences, updatePreference } = usePreferences();
 
   useEffect(() => {
@@ -377,6 +379,19 @@ const Index = () => {
                 <SortAsc className="h-3.5 w-3.5" />
               )}
             </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setIsEditMode(!isEditMode)}
+              className={`h-7 w-7 transition-all duration-200 ${
+                isEditMode
+                  ? "bg-background shadow-sm hover:bg-background/90"
+                  : "hover:bg-background/50"
+              }`}
+              title={`${isEditMode ? "Disable" : "Enable"} edit mode`}
+            >
+              <Pencil className="h-3.5 w-3.5" />
+            </Button>
           </div>
         </div>
 
@@ -388,6 +403,7 @@ const Index = () => {
           onArchive={handleArchiveArticle}
           onDelete={handleDeleteArticle}
           onRefreshMetadata={handleRefreshMetadata}
+          isEditMode={isEditMode}
         />
       </div>
       <ImportArticlesModal
