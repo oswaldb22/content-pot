@@ -3,6 +3,7 @@ import { AddArticleModal } from "@/components/AddArticleModal";
 import { ArticleList } from "@/components/ArticleList";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { ShareButton } from "@/components/ShareButton";
+import { ImportArticlesModal } from "@/components/ImportArticlesModal";
 
 import {
   List,
@@ -36,6 +37,8 @@ import { useRewardAnimation } from "@/hooks/useRewardAnimation";
 
 const Index = () => {
   const [articles, setArticles] = useState<Article[]>([]);
+  const [importModalOpen, setImportModalOpen] = useState(false);
+  const [sharedArticles, setSharedArticles] = useState<Article[]>([]);
   const { preferences, updatePreference } = usePreferences();
 
   useEffect(() => {
@@ -53,25 +56,30 @@ const Index = () => {
     const hash = window.location.hash;
     if (hash.startsWith("#data=")) {
       const encodedData = hash.slice(6); // Remove '#data='
-      const sharedArticles = decodeArticlesFromUrl(encodedData);
+      const shared = decodeArticlesFromUrl(encodedData);
 
-      // Merge shared articles with local articles, avoiding duplicates
-      const mergedArticles = [...localArticles];
-      sharedArticles.forEach((sharedArticle) => {
-        if (
-          !mergedArticles.some((article) => article.id === sharedArticle.id)
-        ) {
-          mergedArticles.push(sharedArticle);
-        }
-      });
+      // Filter out articles that already exist
+      const newSharedArticles = shared.filter(
+        (sharedArticle) =>
+          !localArticles.some((article) => article.id === sharedArticle.id)
+      );
 
-      setArticles(mergedArticles);
+      if (newSharedArticles.length > 0) {
+        setSharedArticles(newSharedArticles);
+        setImportModalOpen(true);
+      }
+
       // Clear the hash after processing
       window.history.replaceState(null, "", window.location.pathname);
-    } else {
-      setArticles(localArticles);
     }
+
+    setArticles(localArticles);
   }, []);
+
+  const handleImportArticles = (selectedArticles: Article[]) => {
+    setArticles((prev) => [...prev, ...selectedArticles]);
+    setSharedArticles([]);
+  };
 
   useEffect(() => {
     localStorage.setItem("articles", JSON.stringify(articles));
@@ -382,6 +390,12 @@ const Index = () => {
           onRefreshMetadata={handleRefreshMetadata}
         />
       </div>
+      <ImportArticlesModal
+        articles={sharedArticles}
+        onImport={handleImportArticles}
+        open={importModalOpen}
+        onOpenChange={setImportModalOpen}
+      />
     </div>
   );
 };
