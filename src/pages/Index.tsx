@@ -51,6 +51,7 @@ const Index = () => {
           ...article,
           status: "active",
           categories: article.categories || [],
+          dateAdded: article.dateAdded || new Date().toISOString(), // Ensure dateAdded exists
         }))
       : [];
 
