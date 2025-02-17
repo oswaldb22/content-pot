@@ -93,6 +93,7 @@ export const refreshArticleMetadata = async (
   if (data.status === "success") {
     return {
       ...article,
+      categories: article.categories || [], // Ensure categories is initialized
       title: data.data.title,
       description: data.data.description,
       image: data.data.image?.url,
