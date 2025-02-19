@@ -24,6 +24,27 @@ function safeEncodeUrl(url) {
   }
 }
 
+// Track background tabs created by the extension
+const backgroundTabs = new Set();
+
+// Listen for tab updates to handle navigation completion
+chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+  console.log("Tab updated:", tabId, changeInfo, tab);
+  if (backgroundTabs.has(tabId) && changeInfo.status === "complete") {
+    // Check if the tab has navigated back to the app URL
+    if (tab.url && tab.url === APP_URL + "/") {
+      // Remove from tracking set and close the tab
+      backgroundTabs.delete(tabId);
+      chrome.tabs.remove(tabId).catch(console.error);
+    }
+  }
+});
+
+// Clean up if a background tab is closed manually
+chrome.tabs.onRemoved.addListener((tabId) => {
+  backgroundTabs.delete(tabId);
+});
+
 // Handle extension icon click
 chrome.action.onClicked.addListener(async (tab) => {
   try {
@@ -38,9 +59,14 @@ chrome.action.onClicked.addListener(async (tab) => {
     // Construct the target URL
     const targetUrl = `${APP_URL}/add/${encodedUrl}`;
 
-    // Create new tab with the target URL
+    // Create new tab with the target URL in the background
     try {
-      await chrome.tabs.create({ url: targetUrl });
+      const newTab = await chrome.tabs.create({
+        url: targetUrl,
+        active: false, // Create in background without focusing
+      });
+      // Add to tracking set
+      backgroundTabs.add(newTab.id);
     } catch (e) {
       console.error("Failed to create new tab:", e);
       // Show error badge
