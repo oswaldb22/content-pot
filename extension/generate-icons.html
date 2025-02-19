@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Generate Extension Icons</title>
+    <style>
+      .icon-preview {
+        margin: 20px;
+        padding: 10px;
+        border: 1px solid #ccc;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="icon-preview">
+      <canvas id="canvas16" width="16" height="16"></canvas>
+      <canvas id="canvas48" width="48" height="48"></canvas>
+      <canvas id="canvas128" width="128" height="128"></canvas>
+    </div>
+    <div id="status"></div>
+
+    <script>
+      async function saveIcon(canvas, size) {
+        const blob = await new Promise((resolve) => canvas.toBlob(resolve));
+        const formData = new FormData();
+        formData.append("icon", blob, `icon${size}.png`);
+
+        try {
+          const response = await fetch("/save-icon", {
+            method: "POST",
+            body: formData,
+          });
+
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+
+          document.getElementById(
+            "status"
+          ).innerHTML += `<p>Icon ${size}x${size} saved successfully</p>`;
+        } catch (error) {
+          document.getElementById(
+            "status"
+          ).innerHTML += `<p style="color: red">Error saving icon ${size}x${size}: ${error.message}</p>`;
+        }
+      }
+
+      function drawIcon(canvas) {
+        const ctx = canvas.getContext("2d");
+
+        // Create gradient background
+        const gradient = ctx.createLinearGradient(
+          0,
+          0,
+          canvas.width,
+          canvas.height
+        );
+        gradient.addColorStop(0, "#3B82F6");
+        gradient.addColorStop(1, "#2563EB");
+
+        // Draw background
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Draw "AB" text
+        ctx.fillStyle = "white";
+        ctx.font = `bold ${canvas.width * 0.5}px Arial`;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText("AB", canvas.width / 2, canvas.height / 2);
+      }
+
+      // Generate all icon sizes
+      [16, 48, 128].forEach((size) => {
+        const canvas = document.getElementById(`canvas${size}`);
+        drawIcon(canvas);
+        saveIcon(canvas, size);
+      });
+    </script>
+  </body>
+</html>
