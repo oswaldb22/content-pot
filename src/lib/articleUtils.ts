@@ -24,7 +24,9 @@ export const getUniqueDomains = (articles: Article[]): string[] => {
 export const getUniqueCategories = (articles: Article[]): string[] => {
   const categories = new Set<string>();
   articles.forEach((article) => {
-    article.categories.forEach((category) => categories.add(category));
+    if (article && article.categories) {
+      article.categories.forEach((category) => categories.add(category));
+    }
   });
   return Array.from(categories);
 };
