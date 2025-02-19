@@ -29,7 +29,6 @@ const backgroundTabs = new Set();
 
 // Listen for tab updates to handle navigation completion
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
-  console.log("Tab updated:", tabId, changeInfo, tab);
   if (backgroundTabs.has(tabId) && changeInfo.status === "complete") {
     // Check if the tab has navigated back to the app URL
     if (tab.url && tab.url === APP_URL + "/") {
