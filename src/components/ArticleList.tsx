@@ -156,9 +156,9 @@ export function ArticleList({
               )}
               <a
                 href={
-                  article.url.startsWith("http")
+                  article.url.match(/^https?:\/\//)
                     ? article.url
-                    : `https://${article.url}`
+                    : `https://${article.url.replace(/^https?:\/\//, "")}`
                 }
                 target="_blank"
                 rel="noopener noreferrer"
