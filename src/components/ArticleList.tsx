@@ -125,6 +125,25 @@ export function ArticleList({
       </div>
     );
   }
+  const normalizeUrl = (url) => {
+    // If URL starts with protocol-relative "//", add "https:"
+    if (url.startsWith("//")) {
+      return "https:" + url;
+    }
+    // Fix URLs with only one slash after the protocol
+    if (url.startsWith("https:/") && !url.startsWith("https://")) {
+      return url.replace("https:/", "https://");
+    }
+    if (url.startsWith("http:/") && !url.startsWith("http://")) {
+      return url.replace("http:/", "http://");
+    }
+    // If it already starts with a proper protocol, return it
+    if (/^https?:\/\//.test(url)) {
+      return url;
+    }
+    // Otherwise, assume it's missing a protocol and add https://
+    return `https://${url}`;
+  };
 
   return (
     <>
@@ -155,13 +174,7 @@ export function ArticleList({
                 </div>
               )}
               <a
-                href={
-                  article.url.startsWith("//")
-                    ? `https:${article.url}`
-                    : article.url.match(/^https?:\/\//)
-                    ? article.url
-                    : `https://${article.url}`
-                }
+                href={normalizeUrl(article.url)}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-start gap-3 flex-1 min-w-0 group"
