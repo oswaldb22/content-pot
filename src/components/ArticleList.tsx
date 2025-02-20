@@ -155,7 +155,11 @@ export function ArticleList({
                 </div>
               )}
               <a
-                href={article.url}
+                href={
+                  article.url.startsWith("http")
+                    ? article.url
+                    : `https://${article.url}`
+                }
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-start gap-3 flex-1 min-w-0 group"
