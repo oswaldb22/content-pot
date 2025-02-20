@@ -4,6 +4,9 @@ const APP_URL = "http://localhost:8080"; // Update this with your actual app URL
 // Helper function to validate and sanitize URLs
 function isValidUrl(url) {
   try {
+    if (url.startsWith(APP_URL)) {
+      return false;
+    }
     new URL(url);
     return true;
   } catch (e) {
@@ -24,6 +27,13 @@ function safeEncodeUrl(url) {
   }
 }
 
+// show duccess badge
+function showSuccessBadge() {
+  chrome.action.setBadgeText({ text: "✓" });
+  chrome.action.setBadgeBackgroundColor({ color: "#10B981" });
+  setTimeout(() => chrome.action.setBadgeText({ text: "" }), 3000);
+}
+
 // Track background tabs created by the extension
 const backgroundTabs = new Set();
 
@@ -35,6 +45,7 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
       // Remove from tracking set and close the tab
       backgroundTabs.delete(tabId);
       chrome.tabs.remove(tabId).catch(console.error);
+      showSuccessBadge();
     }
   }
 });
@@ -47,6 +58,10 @@ chrome.tabs.onRemoved.addListener((tabId) => {
 // Handle extension icon click
 chrome.action.onClicked.addListener(async (tab) => {
   try {
+    // Show loading state immediately
+    await chrome.action.setBadgeText({ text: "..." });
+    await chrome.action.setBadgeBackgroundColor({ color: "#3B82F6" });
+
     // Validate current tab has a valid URL
     if (!tab.url || !isValidUrl(tab.url)) {
       throw new Error("Invalid or missing URL");
@@ -74,11 +89,6 @@ chrome.action.onClicked.addListener(async (tab) => {
       setTimeout(() => chrome.action.setBadgeText({ text: "" }), 3000);
       throw e;
     }
-
-    // Show success badge
-    await chrome.action.setBadgeText({ text: "✓" });
-    await chrome.action.setBadgeBackgroundColor({ color: "#059669" });
-    setTimeout(() => chrome.action.setBadgeText({ text: "" }), 3000);
   } catch (error) {
     console.error("Extension error:", error);
     // Show error badge
