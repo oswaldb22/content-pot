@@ -155,6 +155,11 @@ chrome.action.onClicked.addListener(async (tab) => {
       throw new Error("Invalid or missing URL");
     }
 
+    if (await checkUrlInStorage(tab.url)) {
+      console.log("URL already exists in storage");
+      showSuccessBadge();
+      return;
+    }
     // Encode the current URL
     const encodedUrl = safeEncodeUrl(tab.url);
 
