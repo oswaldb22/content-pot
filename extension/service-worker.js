@@ -15,6 +15,21 @@ function isValidUrl(url) {
   }
 }
 
+// Helper function to normalize URL for consistent comparison
+function normalizeUrl(url) {
+  try {
+    const urlObj = new URL(url);
+    // Remove trailing slashes and convert to lowercase
+    return (
+      urlObj.origin.toLowerCase() +
+      urlObj.pathname.toLowerCase().replace(/\/$/, "")
+    );
+  } catch (e) {
+    console.error("URL normalization failed:", e);
+    return url.toLowerCase();
+  }
+}
+
 // Helper function to encode URL safely
 function safeEncodeUrl(url) {
   try {
@@ -27,33 +42,97 @@ function safeEncodeUrl(url) {
   }
 }
 
-// show duccess badge
+// Check if URL exists in localStorage
+async function checkUrlInStorage(url) {
+  try {
+    const normalizedUrl = normalizeUrl(url);
+    const storageData = await chrome.storage.local.get(null);
+    const urls = Object.values(storageData).flat();
+    return urls.some((item) => normalizeUrl(item.url) === normalizedUrl);
+  } catch (e) {
+    console.error("Storage check failed:", e);
+    return false;
+  }
+}
+
+// Update extension icon based on URL status
+async function updateIcon(tabId, url) {
+  console.log("Updating icon for tab:", tabId, url);
+  if (!url || !isValidUrl(url)) {
+    await chrome.action.setBadgeText({ text: "" });
+    return;
+  }
+
+  const exists = await checkUrlInStorage(url);
+  if (exists) {
+    await chrome.action.setBadgeText({ text: "✓" });
+    await chrome.action.setBadgeBackgroundColor({ color: "#10B981" });
+  } else {
+    await chrome.action.setBadgeText({ text: "" });
+  }
+}
+
+// Show success badge
 function showSuccessBadge() {
   chrome.action.setBadgeText({ text: "✓" });
   chrome.action.setBadgeBackgroundColor({ color: "#10B981" });
-  setTimeout(() => chrome.action.setBadgeText({ text: "" }), 3000);
+  // setTimeout(() => chrome.action.setBadgeText({ text: "" }), 3000);
 }
 
 // Track background tabs created by the extension
 const backgroundTabs = new Set();
+const tabUrlMap = new Map();
 
-// Listen for tab updates to handle navigation completion
-chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+// Listen for tab updates to handle navigation completion and URL changes
+chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
+  // Handle background tabs created by the extension
   if (backgroundTabs.has(tabId) && changeInfo.status === "complete") {
-    // Check if the tab has navigated back to the app URL
     if (tab.url && tab.url === APP_URL + "/") {
-      // Remove from tracking set and close the tab
       backgroundTabs.delete(tabId);
       chrome.tabs.remove(tabId).catch(console.error);
+
+      // add it to the local storage
+      const url = tabUrlMap.get(tabId);
+      if (!url) {
+        console.error("URL not found for tab:", tabId);
+        return;
+      }
+      const storageData = await chrome.storage.local.get(null);
+      const urls = Object.values(storageData).flat();
+      const newUrls = [...urls, { url }];
+      await chrome.storage.local.set({ urls: newUrls });
+
       showSuccessBadge();
+      return;
     }
   }
+
+  // Update icon when URL changes or page loads
+  if (changeInfo.url || changeInfo.status === "complete") {
+    await updateIcon(tabId, tab.url);
+  }
+});
+
+// Listen for tab activation to update icon
+chrome.tabs.onActivated.addListener(async (activeInfo) => {
+  const tab = await chrome.tabs.get(activeInfo.tabId);
+  await updateIcon(activeInfo.tabId, tab.url);
 });
 
 // Clean up if a background tab is closed manually
 chrome.tabs.onRemoved.addListener((tabId) => {
   backgroundTabs.delete(tabId);
 });
+
+// Handle storage changes to update icons
+// chrome.storage.onChanged.addListener(async (changes, namespace) => {
+//   if (namespace === "local") {
+//     const tabs = await chrome.tabs.query({});
+//     for (const tab of tabs) {
+//       await updateIcon(tab.id, tab.url);
+//     }
+//   }
+// });
 
 // Handle extension icon click
 chrome.action.onClicked.addListener(async (tab) => {
@@ -81,6 +160,7 @@ chrome.action.onClicked.addListener(async (tab) => {
       });
       // Add to tracking set
       backgroundTabs.add(newTab.id);
+      tabUrlMap.set(newTab.id, tab.url);
     } catch (e) {
       console.error("Failed to create new tab:", e);
       // Show error badge
