@@ -103,12 +103,18 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
       await chrome.storage.local.set({ urls: newUrls });
 
       showSuccessBadge();
-      return;
     }
   }
 
-  // Update icon when URL changes or page loads
-  if (changeInfo.url || changeInfo.status === "complete") {
+  // Only update icon for active tab when URL changes or page loads
+  const activeTab = await chrome.tabs.query({
+    active: true,
+    currentWindow: true,
+  });
+  if (
+    activeTab[0]?.id === tabId &&
+    (changeInfo.url || changeInfo.status === "complete")
+  ) {
     await updateIcon(tabId, tab.url);
   }
 });
@@ -124,15 +130,18 @@ chrome.tabs.onRemoved.addListener((tabId) => {
   backgroundTabs.delete(tabId);
 });
 
-// Handle storage changes to update icons
-// chrome.storage.onChanged.addListener(async (changes, namespace) => {
-//   if (namespace === "local") {
-//     const tabs = await chrome.tabs.query({});
-//     for (const tab of tabs) {
-//       await updateIcon(tab.id, tab.url);
-//     }
-//   }
-// });
+// Handle storage changes to update icon only for active tab
+chrome.storage.onChanged.addListener(async (changes, namespace) => {
+  if (namespace === "local") {
+    const [activeTab] = await chrome.tabs.query({
+      active: true,
+      currentWindow: true,
+    });
+    if (activeTab) {
+      await updateIcon(activeTab.id, activeTab.url);
+    }
+  }
+});
 
 // Handle extension icon click
 chrome.action.onClicked.addListener(async (tab) => {
