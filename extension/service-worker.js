@@ -57,7 +57,6 @@ async function checkUrlInStorage(url) {
 
 // Update extension icon based on URL status
 async function updateIcon(tabId, url) {
-  console.log("Updating icon for tab:", tabId, url);
   if (!url || !isValidUrl(url)) {
     await chrome.action.setBadgeText({ text: "" });
     return;
