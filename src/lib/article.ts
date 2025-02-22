@@ -104,3 +104,7 @@ export const refreshArticleMetadata = async (
 
   return article;
 };
+
+export const getArticles = (): Article[] => {
+  return JSON.parse(localStorage.getItem("articles") || "[]");
+};
