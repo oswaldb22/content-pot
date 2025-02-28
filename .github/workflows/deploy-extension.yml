@@ -1,0 +1,62 @@
+name: Deploy Chrome Extension
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "extension/**"
+  workflow_dispatch: # Allow manual triggering
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: extension/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ./extension
+        run: npm ci
+
+      - name: Generate icons
+        working-directory: ./extension
+        run: node generate-icons.js
+
+      - name: Create build directory
+        run: mkdir -p build
+
+      - name: Package extension
+        run: |
+          cd extension
+          zip -r ../build/extension.zip manifest.json service-worker.js icons/*
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: chrome-extension
+          path: build/extension.zip
+          retention-days: 5
+
+      # Chrome Web Store Deployment
+      # - name: Deploy to Chrome Web Store
+      #   if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+      #   env:
+      #     EXTENSION_ID: ${{ secrets.EXTENSION_ID }}
+      #     CLIENT_ID: ${{ secrets.CHROME_CLIENT_ID }}
+      #     CLIENT_SECRET: ${{ secrets.CHROME_CLIENT_SECRET }}
+      #     REFRESH_TOKEN: ${{ secrets.CHROME_REFRESH_TOKEN }}
+      #   run: |
+      #     # Install Chrome Web Store CLI tool
+      #     npm install -g chrome-webstore-upload-cli
+
+      #     # Upload and publish
+      #     chrome-webstore-upload upload --source build/extension.zip --extension-id $EXTENSION_ID --client-id $CLIENT_ID --client-secret $CLIENT_SECRET --refresh-token $REFRESH_TOKEN
+      #     chrome-webstore-upload publish --extension-id $EXTENSION_ID --client-id $CLIENT_ID --client-secret $CLIENT_SECRET --refresh-token $REFRESH_TOKEN
