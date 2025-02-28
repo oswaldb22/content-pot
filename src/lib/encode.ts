@@ -40,6 +40,7 @@ function extractArticleEssentials(article: Article): Partial<Article> {
     title: article.title,
     description: article.description,
     image: article.image,
+    favicon: article.favicon,
   };
 }
 
