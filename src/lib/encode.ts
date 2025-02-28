@@ -30,13 +30,48 @@ function fromBase64URL(base64url: string): string {
     .padEnd(base64url.length + padding.length, "=");
 }
 
+// Size threshold for full article inclusion (1MB in bytes)
+const SIZE_THRESHOLD_BYTES = 1048576;
+
+// Extract only essential fields from an article for encoding
+function extractArticleEssentials(article: Article): Partial<Article> {
+  return {
+    url: article.url,
+    title: article.title,
+    description: article.description,
+    image: article.image,
+  };
+}
+
+// Estimate the size of all articles in dataset
+function estimateDatasetSize(articles: Article[]): number {
+  try {
+    // Create array with essential fields for accurate size estimation
+    const essentials = articles.map(extractArticleEssentials);
+    const jsonStr = JSON.stringify(essentials);
+    return new TextEncoder().encode(jsonStr).length;
+  } catch (error) {
+    console.error("Error estimating dataset size:", error);
+    return Infinity; // Conservative approach
+  }
+}
+
 export function encodeArticlesForUrl(articles: Article[]): string {
   try {
-    // Convert articles to JSON string
+    const totalSize = estimateDatasetSize(articles);
+    const useEssentialsOnly = totalSize >= SIZE_THRESHOLD_BYTES;
+
+    // Convert articles to JSON string based on total size
     const jsonStr = JSON.stringify(
-      articles.map((article) => ({
-        url: article.url,
-      }))
+      articles.map((article) => {
+        if (useEssentialsOnly) {
+          // If dataset is large, only include URL
+          return { url: article.url };
+        } else {
+          // Otherwise include essential fields
+          return extractArticleEssentials(article);
+        }
+      })
     );
 
     // Compress the JSON string using pako
@@ -75,24 +110,36 @@ export function decodeArticlesFromUrl(encoded: string): Article[] {
       throw new Error("Invalid data format: not an array");
     }
 
-    // Basic validation of article properties
-    const articles: Article[] = data.map((article) => {
+    console.log(`Decoding ${data.length} articles from URL`);
+
+    const articles: Article[] = data.map((article, index) => {
       if (!article.url) {
-        throw new Error("Invalid article format");
+        throw new Error(
+          `Invalid article format at index ${index}: missing URL`
+        );
       }
+
       return {
-        ...article,
+        url: article.url,
+        title: article.title,
+        description: article.description,
+        image: article.image,
         id: crypto.randomUUID(),
         read: false,
         deleted: false,
-        status: "active",
+        status: "active" as const,
         dateAdded: new Date().toISOString(),
+        categories: [],
+        favorite: false,
       };
     });
 
     return articles;
   } catch (error) {
     console.error("Error decoding articles:", error);
+    if (error instanceof Error) {
+      console.error("Error details:", error.message);
+    }
     return [];
   }
 }
