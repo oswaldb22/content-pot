@@ -122,9 +122,10 @@ export function decodeArticlesFromUrl(encoded: string): Article[] {
 
       return {
         url: article.url,
-        title: article.title,
-        description: article.description,
-        image: article.image,
+        title: article?.title,
+        description: article?.description,
+        image: article?.image,
+        favicon: article?.favicon,
         id: crypto.randomUUID(),
         read: false,
         deleted: false,
