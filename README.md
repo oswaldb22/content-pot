@@ -16,16 +16,41 @@ Everything is free and open source. No credit required.
 
 ## Installation
 
+### Using pnpm
+
 ```bash
+# Install dependencies
 pnpm install
-```
 
-```bash
+# Run development server
 pnpm run dev
+
+# Build for production
+pnpm run build
 ```
 
+### Using Docker
+
+The application can be run as a Docker container.
+
+#### Build the Docker image
+
 ```bash
-pnpm run build
+docker build -t content-pot .
+```
+
+#### Run the Docker container
+
+```bash
+docker run -p 8080:80 content-pot
+```
+
+This will start the application and make it available at http://localhost:8080
+
+#### Docker Compose
+
+```bash
+docker-compose up -d
 ```
 
 ## Roadmap
