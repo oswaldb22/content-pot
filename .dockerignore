@@ -1,0 +1,26 @@
+# Node modules and package manager files
+node_modules
+npm-debug.log
+yarn-debug.log
+yarn-error.log
+
+# Git-related files
+.git
+.gitignore
+.github
+
+# Development and build files
+dist
+coverage
+.vscode
+.idea
+*.log
+
+# Environment variables
+.env*
+!.env.example
+
+# Misc
+README.md
+DEPLOYMENT.md
+extension
