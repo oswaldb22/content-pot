@@ -1,5 +1,25 @@
 // Constants
-const APP_URL = "http://localhost:8080"; // Update this with your actual app URL
+let APP_URL = "http://localhost:8080"; // Default app URL
+
+// Initialize APP_URL from storage or use default
+async function initializeAppUrl() {
+  try {
+    const result = await chrome.storage.local.get("appUrl");
+    if (result.appUrl) {
+      APP_URL = result.appUrl;
+      console.log("Loaded APP_URL from storage:", APP_URL);
+    } else {
+      // Set default value in storage if not present
+      await chrome.storage.local.set({ appUrl: APP_URL });
+      console.log("Initialized default APP_URL in storage:", APP_URL);
+    }
+  } catch (error) {
+    console.error("Failed to initialize APP_URL:", error);
+  }
+}
+
+// Call initialization function
+initializeAppUrl();
 
 // Helper function to validate and sanitize URLs
 function isValidUrl(url) {
@@ -129,9 +149,16 @@ chrome.tabs.onRemoved.addListener((tabId) => {
   backgroundTabs.delete(tabId);
 });
 
-// Handle storage changes to update icon only for active tab
+// Handle storage changes to update icon and APP_URL
 chrome.storage.onChanged.addListener(async (changes, namespace) => {
   if (namespace === "local") {
+    // Update APP_URL if it changed in storage
+    if (changes.appUrl) {
+      APP_URL = changes.appUrl.newValue;
+      console.log("APP_URL updated from storage:", APP_URL);
+    }
+
+    // Update icon for active tab
     const [activeTab] = await chrome.tabs.query({
       active: true,
       currentWindow: true,
