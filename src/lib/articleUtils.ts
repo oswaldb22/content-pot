@@ -84,7 +84,7 @@ export const sortArticles = (
   return [...articles].sort((a, b) => {
     const dateA = new Date(a.dateAdded).getTime();
     const dateB = new Date(b.dateAdded).getTime();
-    return sortOrder === "newest" ? dateB - dateA : dateA - dateB;
+    return sortOrder === "newest" ? dateA - dateB : dateB - dateA;
   });
 };
 
