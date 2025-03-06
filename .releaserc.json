@@ -1,0 +1,37 @@
+{
+  "branches": ["main"],
+  "plugins": [
+    "@semantic-release/commit-analyzer",
+    "@semantic-release/release-notes-generator",
+    [
+      "@semantic-release/changelog",
+      {
+        "changelogFile": "CHANGELOG.md"
+      }
+    ],
+    [
+      "@semantic-release/exec",
+      {
+        "prepareCmd": "node -e \"const fs = require('fs'); const manifest = require('./extension/manifest.json'); manifest.version = '${nextRelease.version}'; fs.writeFileSync('./extension/manifest.json', JSON.stringify(manifest, null, 2));\""
+      }
+    ],
+    [
+      "@semantic-release/git",
+      {
+        "assets": ["extension/manifest.json", "CHANGELOG.md"],
+        "message": "chore(release): ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}"
+      }
+    ],
+    [
+      "@semantic-release/github",
+      {
+        "assets": [
+          {
+            "path": "extension/extension.zip",
+            "label": "Chrome Extension v${nextRelease.version}"
+          }
+        ]
+      }
+    ]
+  ]
+}

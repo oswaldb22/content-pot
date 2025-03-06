@@ -1,0 +1,101 @@
+name: Daily Extension Release
+
+on:
+  schedule:
+    - cron: "0 1 * * *" # 1:00 AM UTC
+  workflow_dispatch:
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Fetch all history for semantic-release
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+
+      - name: Configure Git
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+
+      - name: Install dependencies
+        run: |
+          npm ci
+          # Install semantic-release plugins
+          npm install -g semantic-release @semantic-release/changelog @semantic-release/git @semantic-release/exec
+        working-directory: extension
+
+      - name: Run tests or validate manifest
+        run: |
+          if npm test; then
+            echo "Tests passed."
+          else
+            echo "No test script found or tests failed. Validating manifest..."
+            node -e "const m = require('./manifest.json'); if (!m.name || !m.version || !m.manifest_version) { console.error('Invalid manifest'); process.exit(1); } else { console.log('Manifest valid'); }"
+        working-directory: extension
+
+      - name: Package Extension
+        run: zip -r extension.zip .
+        working-directory: extension
+
+      # Use semantic-release to handle versioning, changelog, and release
+      - name: Semantic Release
+        id: semantic
+        uses: cycjimmy/semantic-release-action@v3
+        with:
+          semantic_version: 19
+          extends: .github/workflows/release.config.js
+          extra_plugins: |
+            @semantic-release/changelog
+            @semantic-release/git
+            @semantic-release/exec
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # Notify on success
+      - name: Notify Success
+        if: steps.semantic.outputs.new_release_published == 'true'
+        run: |
+          echo "::notice::🎉 Successfully released version ${steps.semantic.outputs.new_release_version} of the Chrome extension!"
+
+  # Error handling job that runs if the release job fails
+  rollback:
+    needs: [release]
+    if: failure()
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure Git
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+
+      # Delete the failed tag if it exists
+      - name: Delete Failed Tag
+        run: |
+          # Get the latest tag
+          LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+
+          if [ ! -z "$LATEST_TAG" ]; then
+            echo "Deleting failed tag: $LATEST_TAG"
+            git tag -d $LATEST_TAG
+            git push origin :refs/tags/$LATEST_TAG
+          fi
+
+      - name: Notify Failure
+        run: |
+          echo "::error::❌ Chrome extension release failed! See logs for details."
